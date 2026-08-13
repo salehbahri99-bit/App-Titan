@@ -19,6 +19,22 @@
 افتح index.html في المتصفح
 ```
 
+## النشر (GitHub Pages)
+
+يوجد workflow جاهز في `.github/workflows/deploy-pages.yml` ينشر الموقع تلقائياً مع كل push على الفرع الافتراضي.
+
+رابط الموقع بعد النشر:
+
+```
+https://salehbahri99-bit.github.io/App-Titan/
+```
+
+**خطوة مطلوبة مرة واحدة** من إعدادات المستودع:
+
+`Settings` ← `Pages` ← `Build and deployment` ← `Source` = **GitHub Actions**
+
+ثم شغّل الـ workflow من تبويب `Actions` (زر *Run workflow*) أو ادفع أي تعديل جديد.
+
 ## الربط بالبيانات الحقيقية
 
 في `index.html` استبدل مصفوفة `ORDERS` بمصدر البيانات عندك. كل طلب يحتاج الحقول:
