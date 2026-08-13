@@ -29,7 +29,7 @@
 https://salehbahri99-bit.github.io/App-Titan/
 ```
 
-**خطوة مطلوبة مرة واحدة** من إعدادات المستودع:
+**خطوة مطلوبة مرة واحدة** من إعدادات المستودع (لا يمكن أتمتتها — التوكن الافتراضي لـ Actions لا يملك صلاحية إنشاء موقع Pages):
 
 `Settings` ← `Pages` ← `Build and deployment` ← `Source` = **GitHub Actions**
 

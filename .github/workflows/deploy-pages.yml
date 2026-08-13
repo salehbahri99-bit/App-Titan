@@ -27,11 +27,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # يتطلب تفعيل Pages مسبقاً من:
+      # Settings > Pages > Source = GitHub Actions
+      # (التوكن الافتراضي لا يملك صلاحية إنشاء موقع Pages تلقائياً)
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          # يفعّل GitHub Pages تلقائياً إذا لم يكن مفعّلاً
-          enablement: true
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
