@@ -1,0 +1,86 @@
+// مخطط Prisma لجداول CRM في Titan Print.
+// عند الدمج في مستودع Titan الفعلي: انسخ الموديلات الستة أدناه إلى schema.prisma
+// الموجود هناك (لا تنسخ generator/datasource إن كانا معرّفين مسبقاً).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== CRM Titan ====================
+// customerId / orderId يشيران لمعرّفات Medusa (نص حر — انظر الافتراض 1 في وثيقة التنفيذ)
+
+model CustomerPurchaseStats {
+  customerId             String    @id
+  totalOrders            Int       @default(0)
+  avgCycleDays           Float?
+  stdDevCycleDays        Float?
+  lastOrderDate          DateTime?
+  predictedNextOrderDate DateTime?
+  isOverdue              Boolean   @default(false)
+  wasOverdueNotified     Boolean   @default(false) // يمنع تكرار إشعار n8n لنفس فترة التأخير
+  updatedAt              DateTime  @updatedAt
+
+  @@index([predictedNextOrderDate])
+  @@index([isOverdue])
+}
+
+model CustomerSegment {
+  customerId String   @id
+  segment    String // "VIP" | "REGULAR" | "AT_RISK" | "NEW"
+  rScore     Int
+  fScore     Int
+  mScore     Int
+  computedAt DateTime @updatedAt
+
+  @@index([segment])
+}
+
+model CustomerNote {
+  id         String   @id @default(cuid())
+  customerId String
+  authorId   String
+  authorName String
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, createdAt])
+}
+
+model FollowUpReminder {
+  id          String    @id @default(cuid())
+  customerId  String
+  assignedTo  String
+  dueAt       DateTime
+  note        String?
+  status      String    @default("PENDING") // PENDING | DONE | SNOOZED
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([assignedTo, status, dueAt])
+}
+
+model ContactLog {
+  id          String   @id @default(cuid())
+  customerId  String
+  channel     String // "WHATSAPP" | "CALL" | "EMAIL"
+  templateKey String?
+  performedBy String
+  occurredAt  DateTime @default(now())
+
+  @@index([customerId, occurredAt])
+}
+
+model MessageTemplate {
+  id       String  @id @default(cuid())
+  key      String  @unique
+  label    String
+  body     String
+  category String // "REMINDER" | "OFFER" | "QUALITY_FOLLOWUP"
+  isActive Boolean @default(true)
+}

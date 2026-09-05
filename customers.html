@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Titan Print — الزبائن</title>
+<style>
+  :root{
+    --topbar:#0d3b3f;
+    --nav:#3d3a36;
+    --pill:#4b4642;
+    --pill-hover:#5a5551;
+    --orange:#e8873a;
+    --orange-dark:#d4762c;
+    --cream:#f7edd6;
+    --ink:#2f2b28;
+    --muted:#8a8178;
+    --white:#ffffff;
+    --danger:#b3261e;
+    --danger-bg:#fdecea;
+    --ok:#2e7d32;
+    --shadow:0 2px 8px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",Tahoma,"Noto Kufi Arabic",sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+  }
+
+  /* ---------- الشريط العلوي ---------- */
+  .topbar{
+    background:var(--topbar);
+    color:#e9f2f1;
+    padding:6px 20px;
+    display:flex;
+    justify-content:flex-end;
+    font-size:13px;
+    letter-spacing:.3px;
+  }
+
+  /* ---------- شريط التنقل ---------- */
+  .nav{
+    background:var(--nav);
+    padding:16px 20px 22px;
+    border-bottom:3px solid var(--orange);
+  }
+  .nav-row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .nav-row:last-child{margin-bottom:0}
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--pill);
+    color:#f0ece7;
+    border:none;
+    border-radius:999px;
+    padding:11px 22px;
+    font-size:15px;
+    font-family:inherit;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .pill:hover{background:var(--pill-hover)}
+  .pill.active{background:var(--orange);color:#fff}
+  .pill.active:hover{background:var(--orange-dark)}
+  .pill svg{width:17px;height:17px;flex:none}
+
+  /* ---------- المحتوى ---------- */
+  .content{padding:26px 24px 60px}
+  .page-title{font-size:26px;font-weight:700;margin-bottom:20px}
+
+  /* ---------- شريط المؤشرات ---------- */
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .kpi{
+    background:var(--white);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:16px 18px;
+    border-inline-start:5px solid var(--topbar);
+  }
+  .kpi.alert{border-inline-start-color:var(--danger);background:var(--danger-bg)}
+  .kpi.gold{border-inline-start-color:var(--orange)}
+  .kpi .k{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+  .kpi .v{font-size:26px;font-weight:700;display:block}
+  .kpi.alert .v{color:var(--danger)}
+
+  /* ---------- البحث ---------- */
+  .search-wrap{position:relative;margin-bottom:22px}
+  .search-box{
+    background:var(--white);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .search-box svg{width:19px;height:19px;color:var(--orange);flex:none}
+  .search-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:16px;
+    color:var(--ink);
+  }
+  .search-box input::placeholder{color:var(--muted)}
+  .search-hint{font-size:12px;color:var(--muted);white-space:nowrap}
+  .results{
+    position:absolute;
+    inset-inline:0;
+    top:calc(100% + 6px);
+    background:var(--white);
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,.16);
+    padding:6px;
+    z-index:20;
+    max-height:320px;
+    overflow-y:auto;
+  }
+  .results[hidden]{display:none}
+  .result{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:11px 14px;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .result:hover{background:#fdf8ef}
+  .result .rn{font-size:15px;font-weight:600}
+  .result .rs{font-size:12.5px;color:var(--muted)}
+
+  /* ---------- صفوف الفلاتر ---------- */
+  .filter-row{display:flex;justify-content:flex-end;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+  .segmented{
+    display:inline-flex;
+    gap:8px;
+    background:var(--white);
+    border-radius:999px;
+    box-shadow:var(--shadow);
+    padding:7px;
+  }
+  .seg-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:transparent;
+    border:none;
+    border-radius:999px;
+    padding:9px 18px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .15s ease,color .15s ease;
+    white-space:nowrap;
+  }
+  .seg-btn:hover{background:#f2ede6}
+  .seg-btn.active{background:var(--orange);color:#fff}
+  .seg-btn.active:hover{background:var(--orange-dark)}
+  .seg-btn svg{width:16px;height:16px;flex:none}
+  .count{background:rgba(0,0,0,.08);border-radius:999px;padding:1px 8px;font-size:12px}
+  .seg-btn.active .count{background:rgba(255,255,255,.28)}
+  .export-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-inline-end:auto;
+    background:var(--white);
+    border:none;
+    border-radius:999px;
+    box-shadow:var(--shadow);
+    padding:12px 20px;
+    font-family:inherit;
+    font-size:15px;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .export-btn:hover{background:#fdf8ef}
+  .export-btn svg{width:17px;height:17px;color:var(--orange)}
+
+  /* ---------- قائمة الزبائن ---------- */
+  .customers{margin-top:22px;display:grid;gap:12px}
+  .cust{
+    background:var(--white);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    border-inline-start:5px solid var(--orange);
+    cursor:pointer;
+    transition:box-shadow .15s ease;
+  }
+  .cust:hover{box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  .cust.overdue{border-inline-start-color:var(--danger)}
+  .cust .meta{display:flex;flex-direction:column;gap:5px;min-width:190px}
+  .cust .name{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .cust .sub{font-size:13px;color:var(--muted)}
+  .cust .next{font-size:13.5px;color:var(--muted);text-align:center}
+  .cust .next b{display:block;font-size:15px;color:var(--ink);margin-top:3px}
+  .cust.overdue .next b{color:var(--danger)}
+
+  .tag{border-radius:999px;padding:2px 11px;font-size:12px;font-weight:600}
+  .tag.VIP{background:#fdf0d5;color:#8a5a00}
+  .tag.REGULAR{background:#e6f4ea;color:#1e6b32}
+  .tag.AT_RISK{background:#f0ece7;color:#6b6259}
+  .tag.NEW{background:#e4eff5;color:#175b78}
+
+  /* ---------- الإجراءات السريعة ---------- */
+  .quick{display:flex;gap:8px;flex:none}
+  .qbtn{
+    width:42px;height:42px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:#faf6ef;
+    border:none;border-radius:12px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .qbtn:hover{background:#f2e9da}
+  .qbtn svg{width:19px;height:19px}
+  .qbtn.wa svg{color:#1f8a4c}
+  .qbtn.profile svg{color:var(--topbar)}
+  .qbtn.note svg{color:var(--orange)}
+  .qbtn.remind svg{color:#6b4fa8}
+
+  /* ---------- بطاقة الزبون ---------- */
+  .card-head{
+    background:var(--topbar);
+    color:#fff;
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .card-head .title{font-size:20px;font-weight:700}
+  .card-head .title .cid{color:var(--orange)}
+  .back-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--pill);color:#f0ece7;
+    border:none;border-radius:10px;
+    padding:10px 18px;font-size:15px;font-family:inherit;cursor:pointer;
+    transition:background .15s ease;
+  }
+  .back-btn:hover{background:var(--pill-hover)}
+  .badge{background:var(--pill);color:#f0ece7;border-radius:8px;padding:5px 14px;font-size:13px}
+
+  .actions{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:12px;
+  }
+  .action{
+    background:var(--white);
+    border:none;border-radius:14px;box-shadow:var(--shadow);
+    padding:18px 10px;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;
+    text-decoration:none;
+    transition:background .15s ease,transform .15s ease;
+  }
+  .action:hover{background:#fdf8ef;transform:translateY(-2px)}
+  .action svg{width:22px;height:22px;color:var(--topbar)}
+  .action.copy svg{color:var(--orange)}
+  .action.copied{background:#e8f5e9}
+  .action.copied svg{color:var(--ok)}
+
+  .panel{
+    background:var(--white);
+    border-radius:14px;box-shadow:var(--shadow);
+    padding:16px 20px;margin-top:14px;
+  }
+  .panel-title{font-size:16px;font-weight:700;color:var(--topbar);margin-bottom:14px}
+  .fields{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:14px;text-align:center;
+  }
+  .field .k{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .field .v{display:block;font-size:15px}
+  .field .v.late{color:var(--danger);font-weight:600}
+
+  .tabs{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .tab{
+    background:var(--white);border:none;border-radius:999px;box-shadow:var(--shadow);
+    padding:10px 20px;font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;
+  }
+  .tab.active{background:var(--orange);color:#fff}
+
+  .list{display:grid;gap:10px}
+  .item{
+    border:1px solid #efe7da;border-radius:12px;padding:12px 14px;
+    display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
+  }
+  .item .t{font-size:14.5px}
+  .item .d{font-size:12.5px;color:var(--muted)}
+  .empty{color:var(--muted);font-size:14px;padding:6px 2px}
+
+  .composer{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .composer input,.composer textarea,.composer select{
+    flex:1;min-width:180px;
+    border:1px solid #e3dacb;border-radius:10px;
+    padding:11px 14px;font-family:inherit;font-size:15px;color:var(--ink);
+    background:#fffdf9;outline:none;
+  }
+  .composer input:focus,.composer textarea:focus{border-color:var(--orange)}
+  .btn{
+    background:var(--orange);color:#fff;border:none;border-radius:10px;
+    padding:11px 22px;font-family:inherit;font-size:15px;cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn:hover{background:var(--orange-dark)}
+  .btn.ghost{background:var(--white);color:var(--ink);box-shadow:var(--shadow)}
+  .btn.ghost:hover{background:#fdf8ef}
+
+  /* ---------- النوافذ المنبثقة ---------- */
+  .modal{
+    position:fixed;inset:0;z-index:60;
+    background:rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .modal[hidden]{display:none}
+  .sheet{
+    background:var(--white);border-radius:16px;
+    box-shadow:0 10px 40px rgba(0,0,0,.25);
+    padding:20px;width:min(440px,100%);
+  }
+  .sheet h3{font-size:17px;margin-bottom:14px;color:var(--topbar)}
+  .sheet .row{display:flex;gap:10px;justify-content:flex-start;margin-top:14px}
+  .tpl{
+    display:block;width:100%;text-align:start;
+    background:#faf6ef;border:none;border-radius:12px;
+    padding:13px 16px;margin-bottom:8px;
+    font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;
+  }
+  .tpl:hover{background:#f2e9da}
+  .tpl .p{display:block;font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+
+  .toast{
+    position:fixed;inset-inline:0;bottom:24px;margin:auto;
+    width:max-content;max-width:90vw;
+    background:var(--topbar);color:#fff;border-radius:999px;
+    padding:12px 26px;font-size:15px;
+    box-shadow:0 6px 20px rgba(0,0,0,.22);
+    opacity:0;transform:translateY(12px);
+    transition:opacity .2s ease,transform .2s ease;
+    pointer-events:none;z-index:80;
+  }
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  @media (max-width:640px){
+    .segmented{width:100%;justify-content:center;flex-wrap:wrap}
+    .filter-row{justify-content:stretch}
+    .export-btn{width:100%;justify-content:center}
+    .cust{justify-content:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">Titan Print</div>
+
+<nav class="nav">
+  <div class="nav-row">
+    <a class="pill" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
+      تصميم
+    </a>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+      طباعة
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      متابعة
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      تواصل
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      إعدادات
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      الأقسام ▴
+    </button>
+  </div>
+
+  <div class="nav-row">
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      لوحة
+    </button>
+    <a class="pill" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      كل الطلبات
+    </a>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      الجدولة
+    </button>
+    <button class="pill active" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      الزبائن
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      المحاسبة
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+      المخزون
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+      طلب ذكي
+    </button>
+  </div>
+</nav>
+
+<main class="content">
+
+  <!-- ===================== شاشة القائمة ===================== -->
+  <section id="listView">
+    <h1 class="page-title">إدارة الزبائن</h1>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="search" type="search" autocomplete="off"
+               placeholder="ابحث بالاسم، الهاتف، أو اسم النشاط…">
+        <span class="search-hint">Ctrl + K</span>
+      </div>
+      <div class="results" id="results" hidden></div>
+    </div>
+
+    <div class="filter-row">
+      <div class="segmented" id="segFilter">
+        <button class="seg-btn active" data-segment="all" type="button">الكل <span class="count" data-count="all">0</span></button>
+        <button class="seg-btn" data-segment="VIP" type="button">VIP <span class="count" data-count="VIP">0</span></button>
+        <button class="seg-btn" data-segment="REGULAR" type="button">منتظم <span class="count" data-count="REGULAR">0</span></button>
+        <button class="seg-btn" data-segment="AT_RISK" type="button">متقطع <span class="count" data-count="AT_RISK">0</span></button>
+        <button class="seg-btn" data-segment="NEW" type="button">جديد <span class="count" data-count="NEW">0</span></button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <div class="segmented" id="sortFilter">
+        <button class="seg-btn active" data-sort="due" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          الأقرب استحقاقاً
+        </button>
+        <button class="seg-btn" data-sort="recent" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+          الأحدث طلباً
+        </button>
+        <button class="seg-btn" data-sort="spend" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>
+          الأكثر إنفاقاً
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <button class="export-btn" id="exportBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        تصدير الجدول
+      </button>
+      <div class="segmented" id="dueFilter">
+        <button class="seg-btn active" data-due="all" type="button">كل الزبائن <span class="count" data-due-count="all">0</span></button>
+        <button class="seg-btn" data-due="due" type="button">يحتاج متابعة <span class="count" data-due-count="due">0</span></button>
+        <button class="seg-btn" data-due="overdue" type="button">متأخر <span class="count" data-due-count="overdue">0</span></button>
+      </div>
+    </div>
+
+    <div class="customers" id="customersList"></div>
+  </section>
+
+  <!-- ===================== شاشة ملف الزبون ===================== -->
+  <section id="profileView" hidden></section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   Titan CRM — نسخة تعمل بلا خادم داخل هذا المستودع الساكن.
+   المعادلات (دورة الشراء، التنبؤ، RFM، تطبيع النص/الهاتف، روابط واتساب)
+   مطابقة لما في crm-server/lib/crm/*.ts حتى تبقى النتائج واحدة عند الربط
+   بالخادم الحقيقي لاحقاً.
+   ===================================================================== */
+
+const CURRENCY = "₪";
+const DAY = 86400000;
+const DUE_BUFFER_DAYS = 3;              // نافذة "يحتاج متابعة"
+const BUSINESS_NAME = "تايتن للطباعة";
+
+/* ---------------- بيانات تجريبية ----------------
+   استبدل SEED بمصدر البيانات الحقيقي، أو بنتيجة GET /api/crm/customers.
+   daysAgo = أيام مضت على كل طلب (تُحسب من تاريخ اليوم حتى تبقى الشاشة حيّة). */
+const SEED = [
+  { id:"cus_01", name:"أيمن الفحماوي", business:"مطبعة الفحماوي", phone:"0599123456",
+    city:"الطيرة ـ المثلث", daysAgo:[12,42,73,105], spend:4820 },
+  { id:"cus_02", name:"مؤسسة النخبة", business:"النخبة للدعاية", phone:"0598112233",
+    city:"نابلس ـ رفيديا", daysAgo:[2,30,61,92,120], spend:9600 },
+  { id:"cus_03", name:"أحمد الزهراني", business:"مقهى الزهراني", phone:"0569555111",
+    city:"رام الله ـ الماصيون", daysAgo:[45,75,106], spend:2140 },
+  { id:"cus_04", name:"متجر الواحة", business:"الواحة للملابس", phone:"0592244668",
+    city:"الخليل ـ عين سارة", daysAgo:[11,25,39,53], spend:7350 },
+  { id:"cus_05", name:"شركة الأفق", business:"الأفق للتغليف", phone:"0597788990",
+    city:"جنين ـ الحديقة", daysAgo:[90,150,210], spend:12400 },
+  { id:"cus_06", name:"نادي الرواد", business:"نادي الرواد الرياضي", phone:"0594455667",
+    city:"طولكرم ـ المركز", daysAgo:[5], spend:640 },
+  { id:"cus_07", name:"سالم القحطاني", business:"مطعم سالم", phone:"0591122334",
+    city:"بيت لحم ـ المهد", daysAgo:[20,41,63,84,104,125,147], spend:8890 },
+  { id:"cus_08", name:"مخابز السنابل", business:"السنابل", phone:"0596677889",
+    city:"قلقيلية ـ المركز", daysAgo:[60,68,77,85], spend:3260 },
+  { id:"cus_09", name:"صيدلية الشفاء", business:"الشفاء", phone:"0593311447",
+    city:"سلفيت ـ الشارع الرئيسي", daysAgo:[1], spend:410 },
+  { id:"cus_10", name:"مصنع الريان", business:"الريان للمواد الغذائية", phone:"0598899001",
+    city:"أريحا ـ المنطقة الصناعية", daysAgo:[15,45,76,107,138,170], spend:15750 }
+];
+
+/* ---------------- تطبيع (مطابق lib/crm/normalize.ts) ---------------- */
+function normalizePhone(raw, defaultCountryCode = "970") {
+  let digits = String(raw).replace(/[^\d]/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = defaultCountryCode + digits.slice(1);
+  if (!digits.startsWith(defaultCountryCode) && digits.length <= 10) {
+    digits = defaultCountryCode + digits;
+  }
+  return digits;
+}
+function normalizeArabicText(input) {
+  return String(input)
+    .replace(/[ـ]/g, "")
+    .replace(/[إأآا]/g, "ا")
+    .replace(/[ة]/g, "ه")
+    .replace(/[ى]/g, "ي")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/* ---------------- دورة الشراء (مطابق lib/crm/purchase-cycle.ts) ---------------- */
+function computePurchaseCycle(orderDates) {
+  if (orderDates.length < 2) return { avg: null, stdDev: null };
+  const sorted = [...orderDates].sort((a, b) => a - b);
+  const gaps = [];
+  for (let i = 1; i < sorted.length; i++) gaps.push((sorted[i] - sorted[i - 1]) / DAY);
+  const avg = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+  const variance = gaps.reduce((s, g) => s + (g - avg) ** 2, 0) / gaps.length;
+  return { avg, stdDev: Math.sqrt(variance) };
+}
+function predictNextOrder(lastOrderDate, avgCycleDays) {
+  if (avgCycleDays === null) return null;
+  return new Date(lastOrderDate.getTime() + avgCycleDays * DAY);
+}
+function isOverdue(predicted, now = new Date()) {
+  return !!predicted && predicted.getTime() < now.getTime();
+}
+function isDueSoon(predicted, bufferDays = DUE_BUFFER_DAYS, now = new Date()) {
+  if (!predicted) return false;
+  return predicted.getTime() <= now.getTime() + bufferDays * DAY;
+}
+
+/* ---------------- RFM (مطابق computeRFMBatch) ---------------- */
+function quintileScore(value, sortedAsc, reverse = false) {
+  if (sortedAsc.length === 0) return 1;
+  const rank = sortedAsc.filter(v => v <= value).length / sortedAsc.length;
+  const score = Math.min(5, Math.max(1, Math.ceil(rank * 5)));
+  return reverse ? 6 - score : score;
+}
+function computeRFMBatch(inputs) {
+  const recencies   = inputs.map(i => i.recencyDays).sort((a, b) => a - b);
+  const frequencies = inputs.map(i => i.orderCount).sort((a, b) => a - b);
+  const monetary    = inputs.map(i => i.totalSpend).sort((a, b) => a - b);
+
+  return inputs.map(i => {
+    const rScore = quintileScore(i.recencyDays, recencies, true);
+    const fScore = quintileScore(i.orderCount, frequencies);
+    const mScore = quintileScore(i.totalSpend, monetary);
+    const total  = rScore + fScore + mScore;
+
+    let segment = "REGULAR";
+    if (i.orderCount <= 1) segment = "NEW";
+    else if (total >= 13) segment = "VIP";
+    else if (rScore <= 2 && fScore >= 3) segment = "AT_RISK";
+
+    return { customerId: i.customerId, rScore, fScore, mScore, segment };
+  });
+}
+
+/* ---------------- واتساب (مطابق lib/crm/whatsapp.ts) ---------------- */
+function buildWhatsAppLink(phoneIntlDigitsOnly, message) {
+  return `https://wa.me/${phoneIntlDigitsOnly}?text=${encodeURIComponent(message)}`;
+}
+function renderTemplate(body, ctx) {
+  return body.replace(/\{\{(\w+)\}\}/g, (_, key) => ctx[key] ?? "—");
+}
+const TEMPLATES = [
+  { key:"order_reminder",   label:"تذكير بالطلب المعتاد", category:"REMINDER",
+    body:"مرحباً {{customerName}}، هل حان وقت تجديد طلبكم المعتاد من {{businessName}}؟ 😊" },
+  { key:"new_offer",        label:"عرض جديد", category:"OFFER",
+    body:"أهلاً {{customerName}}! لدينا عرض جديد هذا الأسبوع قد يهمّكم." },
+  { key:"quality_followup", label:"متابعة الجودة", category:"QUALITY_FOLLOWUP",
+    body:"مرحباً {{customerName}}، نتابع معكم بخصوص جودة آخر طلب بتاريخ {{lastOrderDate}}." }
+];
+
+/* ---------------- التخزين المحلي (بديل جداول الملاحظات/التذكيرات/السجل) ---------------- */
+const STORE_KEY = "titan_crm_v1";
+const EMPLOYEE  = { id: "emp_local", name: "موظف المبيعات" };
+
+function loadStore() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY)) ?? { notes:{}, reminders:{}, contactLog:{} };
+  } catch {
+    return { notes:{}, reminders:{}, contactLog:{} };
+  }
+}
+function saveStore(s) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch {}
+}
+let store = loadStore();
+const listOf = (bucket, id) => (store[bucket][id] ?? []);
+function push(bucket, id, row) {
+  store[bucket][id] = [row, ...listOf(bucket, id)];
+  saveStore(store);
+}
+
+/* ---------------- بناء الزبائن المحسوبين ---------------- */
+function buildCustomers() {
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const base = SEED.map(c => {
+    const orderDates = c.daysAgo
+      .map(d => new Date(midnight.getTime() - d * DAY))
+      .sort((a, b) => b - a);
+    const { avg, stdDev } = computePurchaseCycle(orderDates);
+    const lastOrderDate = orderDates[0] ?? null;
+    const predicted = lastOrderDate ? predictNextOrder(lastOrderDate, avg) : null;
+
+    return {
+      ...c,
+      orderDates,
+      totalOrders: orderDates.length,
+      avgCycleDays: avg,
+      stdDevCycleDays: stdDev,
+      lastOrderDate,
+      predictedNextOrderDate: predicted,
+      overdue: isOverdue(predicted, now),
+      dueSoon: isDueSoon(predicted, DUE_BUFFER_DAYS, now),
+      recencyDays: lastOrderDate ? (now - lastOrderDate) / DAY : 9999
+    };
+  });
+
+  const rfm = computeRFMBatch(base.map(c => ({
+    customerId: c.id,
+    recencyDays: c.recencyDays,
+    orderCount: c.totalOrders,
+    totalSpend: c.spend
+  })));
+  const rfmMap = new Map(rfm.map(r => [r.customerId, r]));
+
+  return base.map(c => ({ ...c, ...rfmMap.get(c.id) }));
+}
+
+const CUSTOMERS = buildCustomers();
+const byId = id => CUSTOMERS.find(c => c.id === id);
+
+/* ---------------- أدوات عرض ---------------- */
+const SEGMENT_LABELS = { VIP:"VIP", REGULAR:"منتظم", AT_RISK:"متقطع", NEW:"جديد" };
+const money = n => `${Number(n).toLocaleString("ar-EG-u-nu-latn")} ${CURRENCY}`;
+const fmtDate = d => d ? d.toLocaleDateString("ar-EG-u-nu-latn", { year:"numeric", month:"2-digit", day:"2-digit" }) : "—";
+const daysBetween = d => Math.round((Date.now() - d.getTime()) / DAY);
+
+/** صيغة الجمع العربية الصحيحة: يوم واحد / يومين / 3 أيام / 15 يوماً */
+function orderWord(n) {
+  if (n === 1) return "طلب واحد";
+  if (n === 2) return "طلبان";
+  if (n <= 10) return `${n} طلبات`;
+  return `${n} طلباً`;
+}
+
+function dayWord(n) {
+  n = Math.abs(n);
+  if (n === 0) return "0 يوم";
+  if (n === 1) return "يوم واحد";
+  if (n === 2) return "يومين";
+  if (n <= 10) return `${n} أيام`;
+  return `${n} يوماً`;
+}
+
+function relativeDays(date) {
+  if (!date) return "—";
+  const days = daysBetween(date);
+  if (days === 0) return "اليوم";
+  if (days > 0)  return `قبل ${dayWord(days)}`;
+  return `خلال ${dayWord(days)}`;
+}
+function nextLabel(c) {
+  if (!c.predictedNextOrderDate) return { text:"—", note:"طلب واحد فقط" };
+  const days = daysBetween(c.predictedNextOrderDate);
+  if (days > 0)  return { text:`متأخر ${dayWord(days)}`, note:fmtDate(c.predictedNextOrderDate) };
+  if (days === 0) return { text:"اليوم", note:fmtDate(c.predictedNextOrderDate) };
+  return { text:`بعد ${dayWord(days)}`, note:fmtDate(c.predictedNextOrderDate) };
+}
+const esc = s => String(s).replace(/[&<>"']/g, m =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]));
+
+/* ---------------- الحالة والفلاتر ---------------- */
+const state = { segment:"all", due:"all", sort:"due", query:"" };
+
+function filtered() {
+  return CUSTOMERS
+    .filter(c => state.segment === "all" || c.segment === state.segment)
+    .filter(c => state.due === "all"
+      || (state.due === "due" && c.dueSoon)
+      || (state.due === "overdue" && c.overdue))
+    .sort((a, b) => {
+      if (state.sort === "recent") return b.lastOrderDate - a.lastOrderDate;
+      if (state.sort === "spend")  return b.spend - a.spend;
+      // الأقرب استحقاقاً: من لا تنبؤ له في الآخر
+      const av = a.predictedNextOrderDate ? a.predictedNextOrderDate.getTime() : Infinity;
+      const bv = b.predictedNextOrderDate ? b.predictedNextOrderDate.getTime() : Infinity;
+      return av - bv;
+    });
+}
+
+/* ---------------- شريط المؤشرات ---------------- */
+function renderKpis() {
+  const total   = CUSTOMERS.length;
+  const active  = CUSTOMERS.filter(c => c.recencyDays <= 90).length;
+  const vip     = CUSTOMERS.filter(c => c.segment === "VIP").length;
+  const dueSoon = CUSTOMERS.filter(c => c.dueSoon).length;
+
+  document.getElementById("kpis").innerHTML = [
+    { k:"إجمالي الزبائن", v:total },
+    { k:"نشطون (آخر 90 يوماً)", v:active },
+    { k:"زبائن VIP", v:vip, cls:"gold" },
+    { k:"يحتاجون متابعة", v:dueSoon, cls:"alert" }
+  ].map(c => `
+    <div class="kpi ${c.cls ?? ""}">
+      <span class="k">${c.k}</span>
+      <span class="v">${c.v}</span>
+    </div>`).join("");
+}
+
+/* ---------------- أعداد الفلاتر ---------------- */
+function renderCounts() {
+  const seg = document.getElementById("segFilter");
+  seg.querySelector('[data-count="all"]').textContent = CUSTOMERS.length;
+  for (const key of Object.keys(SEGMENT_LABELS)) {
+    seg.querySelector(`[data-count="${key}"]`).textContent =
+      CUSTOMERS.filter(c => c.segment === key).length;
+  }
+  const due = document.getElementById("dueFilter");
+  due.querySelector('[data-due-count="all"]').textContent     = CUSTOMERS.length;
+  due.querySelector('[data-due-count="due"]').textContent     = CUSTOMERS.filter(c => c.dueSoon).length;
+  due.querySelector('[data-due-count="overdue"]').textContent = CUSTOMERS.filter(c => c.overdue).length;
+}
+
+/* ---------------- قائمة الزبائن ---------------- */
+function renderList() {
+  const rows = filtered();
+  const el = document.getElementById("customersList");
+
+  if (!rows.length) {
+    el.innerHTML = '<div class="cust"><span class="sub">لا يوجد زبائن مطابقون للفلتر</span></div>';
+    return;
+  }
+
+  el.innerHTML = rows.map(c => {
+    const n = nextLabel(c);
+    return `
+    <div class="cust ${c.overdue ? "overdue" : ""}" data-id="${c.id}" role="button" tabindex="0">
+      <div class="meta">
+        <span class="name">${esc(c.name)} <span class="tag ${c.segment}">${SEGMENT_LABELS[c.segment]}</span></span>
+        <span class="sub">${esc(c.business)} — ${esc(c.phone)}</span>
+        <span class="sub">${orderWord(c.totalOrders)} · ${c.avgCycleDays ? `كل ${dayWord(Math.round(c.avgCycleDays))}` : "دورة غير محسوبة"} · ${money(c.spend)}</span>
+      </div>
+      <div class="next">
+        آخر طلب: ${relativeDays(c.lastOrderDate)}
+        <b>${n.text}</b>
+      </div>
+      <div class="quick" data-quick="${c.id}">
+        <button class="qbtn wa" type="button" data-act="wa" title="رسالة واتساب" aria-label="رسالة واتساب">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </button>
+        <button class="qbtn profile" type="button" data-act="open" title="ملف الزبون" aria-label="ملف الزبون">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button class="qbtn note" type="button" data-act="note" title="إضافة ملاحظة" aria-label="إضافة ملاحظة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        </button>
+        <button class="qbtn remind" type="button" data-act="remind" title="جدولة تذكير" aria-label="جدولة تذكير">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M5 3L2 6M19 3l3 3"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ---------------- البحث الفوري ---------------- */
+const searchInput = document.getElementById("search");
+const resultsEl   = document.getElementById("results");
+let searchTimer;
+
+function runSearch(q) {
+  if (q.trim().length < 2) { resultsEl.hidden = true; return; }
+
+  const nq    = normalizeArabicText(q);
+  const phone = normalizePhone(q);
+  const digitsTyped = q.replace(/[^\d]/g, "").length >= 3;
+
+  const hits = CUSTOMERS.filter(c =>
+    normalizeArabicText(c.name).includes(nq) ||
+    normalizeArabicText(c.business).includes(nq) ||
+    normalizeArabicText(c.city).includes(nq) ||
+    (digitsTyped && normalizePhone(c.phone).includes(phone))
+  ).slice(0, 20);
+
+  resultsEl.innerHTML = hits.length
+    ? hits.map(c => `
+        <div class="result" data-id="${c.id}">
+          <span class="rn">${esc(c.name)}</span>
+          <span class="rs">${esc(c.business)} · ${esc(c.phone)}</span>
+        </div>`).join("")
+    : '<div class="result"><span class="rs">لا توجد نتائج</span></div>';
+  resultsEl.hidden = false;
+}
+
+searchInput.addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value;
+  searchTimer = setTimeout(() => runSearch(q), 200);   // نفس debounce الـ 250ms تقريباً
+});
+resultsEl.addEventListener("click", e => {
+  const row = e.target.closest(".result[data-id]");
+  if (!row) return;
+  resultsEl.hidden = true;
+  searchInput.value = "";
+  openProfile(row.dataset.id);
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search-wrap")) resultsEl.hidden = true;
+});
+document.addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === "Escape") { resultsEl.hidden = true; closeModal(); }
+});
+
+/* ---------------- ربط الفلاتر ---------------- */
+function bindSegment(containerId, key, attr) {
+  const container = document.getElementById(containerId);
+  container.addEventListener("click", e => {
+    const btn = e.target.closest(".seg-btn");
+    if (!btn) return;
+    container.querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state[key] = btn.dataset[attr];
+    renderList();
+  });
+}
+bindSegment("segFilter",  "segment", "segment");
+bindSegment("dueFilter",  "due",     "due");
+bindSegment("sortFilter", "sort",    "sort");
+
+/* ---------------- الإجراءات السريعة على القائمة ---------------- */
+document.getElementById("customersList").addEventListener("click", e => {
+  const qbtn = e.target.closest(".qbtn");
+  if (qbtn) {
+    const id = qbtn.closest("[data-quick]").dataset.quick;
+    const act = qbtn.dataset.act;
+    if (act === "wa")     openWhatsAppSheet(id);
+    if (act === "open")   openProfile(id);
+    if (act === "note")   openNoteSheet(id);
+    if (act === "remind") openReminderSheet(id);
+    return;
+  }
+  const card = e.target.closest(".cust[data-id]");
+  if (card) openProfile(card.dataset.id);
+});
+document.getElementById("customersList").addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const card = e.target.closest(".cust[data-id]");
+  if (!card) return;
+  e.preventDefault();
+  openProfile(card.dataset.id);
+});
+
+/* ---------------- النسخ (نفس منطق index.html) ---------------- */
+function customerText(c) {
+  const n = nextLabel(c);
+  return [
+    `الاسم: ${c.name}`,
+    `النشاط: ${c.business}`,
+    `الجوال: ${c.phone}`,
+    `العنوان: ${c.city}`,
+    `عدد الطلبات: ${c.totalOrders}`,
+    `آخر طلب: ${fmtDate(c.lastOrderDate)}`,
+    `الطلب المتوقع: ${c.predictedNextOrderDate ? fmtDate(c.predictedNextOrderDate) + ` (${n.text})` : "—"}`,
+    `إجمالي الإنفاق: ${money(c.spend)}`
+  ].join("\n");
+}
+
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch { return false; }
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ---------------- النوافذ المنبثقة ---------------- */
+const modal = document.getElementById("modal");
+const sheet = document.getElementById("sheet");
+
+function closeModal() { modal.hidden = true; sheet.innerHTML = ""; }
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+function openWhatsAppSheet(id) {
+  const c = byId(id);
+  sheet.innerHTML = `
+    <h3>رسالة واتساب — ${esc(c.name)}</h3>
+    ${TEMPLATES.map(t => {
+      const preview = renderTemplate(t.body, {
+        customerName: c.name,
+        businessName: BUSINESS_NAME,
+        lastOrderDate: fmtDate(c.lastOrderDate)
+      });
+      return `<button class="tpl" type="button" data-key="${t.key}">
+                ${esc(t.label)}<span class="p">${esc(preview)}</span>
+              </button>`;
+    }).join("")}
+    <div class="row"><button class="btn ghost" type="button" data-close>إغلاق</button></div>`;
+  modal.hidden = false;
+
+  sheet.querySelectorAll(".tpl").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const t = TEMPLATES.find(x => x.key === btn.dataset.key);
+      const message = renderTemplate(t.body, {
+        customerName: c.name,
+        businessName: BUSINESS_NAME,
+        lastOrderDate: fmtDate(c.lastOrderDate)
+      });
+      window.open(buildWhatsAppLink(normalizePhone(c.phone), message), "_blank", "noopener");
+      push("contactLog", c.id, {
+        id: crypto.randomUUID(),
+        channel: "WHATSAPP",
+        templateKey: t.key,
+        performedBy: EMPLOYEE.name,
+        occurredAt: new Date().toISOString()
+      });
+      closeModal();
+      toast("تم فتح واتساب وتسجيل التواصل");
+      if (!document.getElementById("profileView").hidden) openProfile(c.id, currentTab);
+    });
+  });
+  sheet.querySelector("[data-close]").addEventListener("click", closeModal);
+}
+
+function openNoteSheet(id) {
+  const c = byId(id);
+  sheet.innerHTML = `
+    <h3>ملاحظة على ${esc(c.name)}</h3>
+    <div class="composer"><textarea id="noteBody" rows="4" placeholder="ملاحظة سريعة…"></textarea></div>
+    <div class="row">
+      <button class="btn" type="button" data-save>حفظ</button>
+      <button class="btn ghost" type="button" data-close>إلغاء</button>
+    </div>`;
+  modal.hidden = false;
+  const body = sheet.querySelector("#noteBody");
+  body.focus();
+
+  sheet.querySelector("[data-save]").addEventListener("click", () => {
+    if (!body.value.trim()) { toast("الملاحظة فارغة"); return; }
+    push("notes", c.id, {
+      id: crypto.randomUUID(),
+      body: body.value.trim(),
+      authorName: EMPLOYEE.name,
+      createdAt: new Date().toISOString()
+    });
+    closeModal();
+    toast("تم حفظ الملاحظة");
+    if (!document.getElementById("profileView").hidden) openProfile(c.id, currentTab);
+  });
+  sheet.querySelector("[data-close]").addEventListener("click", closeModal);
+}
+
+function openReminderSheet(id) {
+  const c = byId(id);
+  const suggested = c.predictedNextOrderDate && !c.overdue
+    ? c.predictedNextOrderDate
+    : new Date(Date.now() + 2 * DAY);
+  const local = new Date(suggested.getTime() - suggested.getTimezoneOffset() * 60000)
+    .toISOString().slice(0, 16);
+
+  sheet.innerHTML = `
+    <h3>تذكير متابعة — ${esc(c.name)}</h3>
+    <div class="composer"><input id="dueAt" type="datetime-local" value="${local}"></div>
+    <div class="composer"><input id="rNote" type="text" placeholder="سبب المتابعة (اختياري)"></div>
+    <div class="row">
+      <button class="btn" type="button" data-save>جدولة التذكير</button>
+      <button class="btn ghost" type="button" data-close>إلغاء</button>
+    </div>`;
+  modal.hidden = false;
+
+  sheet.querySelector("[data-save]").addEventListener("click", () => {
+    const dueAt = sheet.querySelector("#dueAt").value;
+    if (!dueAt) { toast("التاريخ مطلوب"); return; }
+    push("reminders", c.id, {
+      id: crypto.randomUUID(),
+      dueAt: new Date(dueAt).toISOString(),
+      note: sheet.querySelector("#rNote").value.trim() || null,
+      status: "PENDING",
+      assignedTo: EMPLOYEE.name,
+      createdAt: new Date().toISOString()
+    });
+    closeModal();
+    toast("تم جدولة التذكير");
+    if (!document.getElementById("profileView").hidden) openProfile(c.id, currentTab);
+  });
+  sheet.querySelector("[data-close]").addEventListener("click", closeModal);
+}
+
+/* ---------------- ملف الزبون ---------------- */
+let currentTab = "overview";
+
+function openProfile(id, tab = "overview") {
+  const c = byId(id);
+  if (!c) return;
+  currentTab = tab;
+
+  const n = nextLabel(c);
+  const notes    = listOf("notes", id);
+  const reminders= listOf("reminders", id).filter(r => r.status === "PENDING");
+  const logs     = listOf("contactLog", id);
+
+  document.getElementById("profileView").innerHTML = `
+    <div class="card-head">
+      <div class="title">${esc(c.name)} <span class="cid">#${esc(c.id)}</span></div>
+      <span class="badge">${SEGMENT_LABELS[c.segment]} · R${c.rScore} F${c.fScore} M${c.mScore}</span>
+      <button class="back-btn" type="button" id="backBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        رجوع للقائمة
+      </button>
+    </div>
+
+    <div class="actions">
+      <button class="action copy" type="button" id="copyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>نسخ البيانات</span>
+      </button>
+      <button class="action" type="button" data-act="wa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>رسالة واتساب</span>
+      </button>
+      <button class="action" type="button" data-act="note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        <span>إضافة ملاحظة</span>
+      </button>
+      <button class="action" type="button" data-act="remind">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M5 3L2 6M19 3l3 3"/></svg>
+        <span>جدولة تذكير</span>
+      </button>
+      <a class="action" href="tel:${esc(c.phone)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.5a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2z"/></svg>
+        <span>اتصال</span>
+      </a>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">بيانات الزبون</div>
+      <div class="fields">
+        <div class="field"><span class="k">النشاط</span><span class="v">${esc(c.business)}</span></div>
+        <div class="field"><span class="k">الجوال</span><span class="v">${esc(c.phone)}</span></div>
+        <div class="field"><span class="k">العنوان</span><span class="v">${esc(c.city)}</span></div>
+        <div class="field"><span class="k">عدد الطلبات</span><span class="v">${c.totalOrders}</span></div>
+        <div class="field"><span class="k">إجمالي الإنفاق</span><span class="v">${money(c.spend)}</span></div>
+        <div class="field"><span class="k">متوسط دورة الشراء</span><span class="v">${c.avgCycleDays ? dayWord(Math.round(c.avgCycleDays)) : "—"}</span></div>
+        <div class="field"><span class="k">تذبذب الدورة</span><span class="v">${c.stdDevCycleDays !== null ? "± " + dayWord(Math.round(c.stdDevCycleDays)) : "—"}</span></div>
+        <div class="field"><span class="k">آخر طلب</span><span class="v">${fmtDate(c.lastOrderDate)}</span></div>
+        <div class="field"><span class="k">الطلب المتوقع</span><span class="v ${c.overdue ? "late" : ""}">${n.text}</span></div>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab ${tab==="overview"?"active":""}" data-tab="overview" type="button">نظرة عامة</button>
+      <button class="tab ${tab==="orders"?"active":""}"   data-tab="orders"   type="button">الطلبات (${c.totalOrders})</button>
+      <button class="tab ${tab==="notes"?"active":""}"    data-tab="notes"    type="button">الملاحظات (${notes.length})</button>
+      <button class="tab ${tab==="activity"?"active":""}" data-tab="activity" type="button">النشاط والتذكيرات (${reminders.length})</button>
+    </div>
+
+    <div class="panel" id="tabPanel">${tabContent(c, tab, notes, reminders, logs)}</div>
+  `;
+
+  document.getElementById("listView").hidden = true;
+  document.getElementById("profileView").hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  document.getElementById("backBtn").addEventListener("click", closeProfile);
+  document.getElementById("copyBtn").addEventListener("click", async e => {
+    const btn = e.currentTarget;
+    const ok = await copyText(customerText(c));
+    if (!ok) { toast("تعذّر النسخ"); return; }
+    const span = btn.querySelector("span");
+    const original = span.textContent;
+    btn.classList.add("copied");
+    span.textContent = "تم النسخ ✓";
+    toast("تم نسخ بيانات الزبون");
+    setTimeout(() => { btn.classList.remove("copied"); span.textContent = original; }, 2000);
+  });
+
+  document.getElementById("profileView").querySelectorAll(".action[data-act]").forEach(b => {
+    b.addEventListener("click", () => {
+      if (b.dataset.act === "wa")     openWhatsAppSheet(c.id);
+      if (b.dataset.act === "note")   openNoteSheet(c.id);
+      if (b.dataset.act === "remind") openReminderSheet(c.id);
+    });
+  });
+
+  document.getElementById("tabs").addEventListener("click", e => {
+    const t = e.target.closest(".tab");
+    if (t) openProfile(c.id, t.dataset.tab);
+  });
+}
+
+function tabContent(c, tab, notes, reminders, logs) {
+  if (tab === "orders") {
+    return `<div class="panel-title">آخر الطلبات</div><div class="list">` +
+      c.orderDates.map((d, i) => `
+        <div class="item">
+          <span class="t">طلب #${c.totalOrders - i}</span>
+          <span class="d">${fmtDate(d)} — ${relativeDays(d)}</span>
+        </div>`).join("") + `</div>
+      <div class="empty">عند الربط بالخادم تُجلب هذه القائمة من <code>/api/crm/customers/${c.id}/orders</code> (Medusa).</div>`;
+  }
+
+  if (tab === "notes") {
+    return `<div class="panel-title">الملاحظات</div>` + (notes.length
+      ? `<div class="list">` + notes.map(n => `
+          <div class="item">
+            <span class="t">${esc(n.body)}</span>
+            <span class="d">${esc(n.authorName)} — ${new Date(n.createdAt).toLocaleString("ar-EG-u-nu-latn")}</span>
+          </div>`).join("") + `</div>`
+      : `<div class="empty">لا توجد ملاحظات بعد — استخدم زر «إضافة ملاحظة».</div>`);
+  }
+
+  if (tab === "activity") {
+    const rem = reminders.length
+      ? `<div class="list">` + reminders.map(r => `
+          <div class="item">
+            <span class="t">${esc(r.note ?? "متابعة")}</span>
+            <span class="d">${new Date(r.dueAt).toLocaleString("ar-EG-u-nu-latn")}</span>
+          </div>`).join("") + `</div>`
+      : `<div class="empty">لا توجد تذكيرات مجدولة.</div>`;
+
+    const log = logs.length
+      ? `<div class="list">` + logs.map(l => `
+          <div class="item">
+            <span class="t">واتساب — ${esc(TEMPLATES.find(t => t.key === l.templateKey)?.label ?? "رسالة")}</span>
+            <span class="d">${esc(l.performedBy)} — ${new Date(l.occurredAt).toLocaleString("ar-EG-u-nu-latn")}</span>
+          </div>`).join("") + `</div>`
+      : `<div class="empty">لا يوجد سجل تواصل بعد.</div>`;
+
+    return `<div class="panel-title">التذكيرات القادمة</div>${rem}
+            <div class="panel-title" style="margin-top:18px">سجل التواصل</div>${log}`;
+  }
+
+  // overview
+  const gaps = [];
+  const sorted = [...c.orderDates].sort((a, b) => a - b);
+  for (let i = 1; i < sorted.length; i++) gaps.push(Math.round((sorted[i] - sorted[i - 1]) / DAY));
+
+  return `<div class="panel-title">قراءة سلوك الشراء</div>
+    <div class="list">
+      <div class="item"><span class="t">الفواصل بين الطلبات</span>
+        <span class="d">${gaps.length ? gaps.join(" · ") + " (بالأيام)" : "طلب واحد فقط — لا يمكن حساب الدورة"}</span></div>
+      <div class="item"><span class="t">التصنيف (RFM)</span>
+        <span class="d">${SEGMENT_LABELS[c.segment]} — حداثة ${c.rScore}/5، تكرار ${c.fScore}/5، إنفاق ${c.mScore}/5</span></div>
+      <div class="item"><span class="t">الحالة</span>
+        <span class="d">${c.overdue ? "متأخر عن موعده المتوقع" : c.dueSoon ? "يحتاج متابعة خلال أيام" : "ضمن دورته الطبيعية"}</span></div>
+      <div class="item"><span class="t">آخر تواصل</span>
+        <span class="d">${logs.length ? new Date(logs[0].occurredAt).toLocaleString("ar-EG-u-nu-latn") : "لم يُسجَّل تواصل بعد"}</span></div>
+    </div>`;
+}
+
+function closeProfile() {
+  document.getElementById("profileView").hidden = true;
+  document.getElementById("profileView").innerHTML = "";
+  document.getElementById("listView").hidden = false;
+  renderKpis();
+  renderCounts();
+  renderList();
+}
+
+/* ---------------- التصدير ---------------- */
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const rows = filtered();
+  if (!rows.length) { toast("لا توجد بيانات للتصدير"); return; }
+
+  const header = ["اسم الزبون","النشاط","الجوال","العنوان","التصنيف","عدد الطلبات",
+                  "متوسط دورة الشراء (يوم)","آخر طلب","الطلب المتوقع","متأخر؟","إجمالي الإنفاق"];
+
+  const cell = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [header.map(cell).join(",")].concat(rows.map(c => [
+    c.name, c.business, c.phone, c.city, SEGMENT_LABELS[c.segment], c.totalOrders,
+    c.avgCycleDays ? Math.round(c.avgCycleDays) : "",
+    c.lastOrderDate ? c.lastOrderDate.toISOString().slice(0, 10) : "",
+    c.predictedNextOrderDate ? c.predictedNextOrderDate.toISOString().slice(0, 10) : "",
+    c.overdue ? "نعم" : "لا", c.spend
+  ].map(cell).join(",")));
+
+  // BOM حتى يفتح Excel النص العربي بترميز صحيح
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type:"text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `titan-customers-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast(`تم تصدير ${rows.length} زبوناً`);
+});
+
+/* ---------------- الإقلاع ---------------- */
+renderKpis();
+renderCounts();
+renderList();
+</script>
+
+</body>
+</html>
