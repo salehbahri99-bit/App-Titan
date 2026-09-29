@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Titan Print — لوحة التحكم</title>
+<style>
+  :root{
+    --topbar:#0d3b3f;
+    --nav:#3d3a36;
+    --pill:#4b4642;
+    --pill-hover:#5a5551;
+    --orange:#e8873a;
+    --orange-dark:#d4762c;
+    --orange-soft:#fbe3cf;
+    --cream:#f7edd6;
+    --ink:#2f2b28;
+    --muted:#8a8178;
+    --line:#eee6d8;
+    --white:#ffffff;
+    --danger:#b3261e;
+    --danger-bg:#fdecea;
+    --warn:#a15c00;
+    --warn-bg:#fff4e0;
+    --ok:#2e7d32;
+    --ok-bg:#e8f3e9;
+    --shadow:0 2px 8px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",Tahoma,"Noto Kufi Arabic",sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+  }
+  button{font-family:inherit}
+
+  /* ---------- الشريط العلوي ---------- */
+  .topbar{
+    background:var(--topbar);color:#e9f2f1;
+    padding:6px 20px;display:flex;justify-content:flex-end;
+    font-size:13px;letter-spacing:.3px;
+  }
+
+  /* ---------- شريط التنقل ---------- */
+  .nav{background:var(--nav);padding:16px 20px 22px;border-bottom:3px solid var(--orange)}
+  .nav-row{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:12px}
+  .nav-row:last-child{margin-bottom:0}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--pill);color:#f0ece7;border:none;border-radius:999px;
+    padding:11px 22px;font-size:15px;text-decoration:none;cursor:pointer;
+    transition:background .15s ease;
+  }
+  .pill:hover{background:var(--pill-hover)}
+  .pill.active{background:var(--orange);color:#fff}
+  .pill.active:hover{background:var(--orange-dark)}
+  .pill svg{width:17px;height:17px;flex:none}
+
+  /* ---------- المحتوى ---------- */
+  .content{padding:26px 24px 60px;max-width:1320px;margin:0 auto}
+  .head{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:20px}
+  .page-title{font-size:26px;font-weight:700}
+  .greet{font-size:14px;color:var(--muted);margin-top:4px}
+  .head-actions{margin-inline-start:auto;display:flex;gap:10px;flex-wrap:wrap}
+
+  .segmented{
+    display:inline-flex;gap:6px;background:var(--white);
+    border-radius:999px;box-shadow:var(--shadow);padding:6px;
+  }
+  .seg-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:transparent;border:none;border-radius:999px;
+    padding:8px 16px;font-size:14.5px;color:var(--ink);cursor:pointer;
+    transition:background .15s ease,color .15s ease;white-space:nowrap;
+  }
+  .seg-btn:hover{background:#f2ede6}
+  .seg-btn.active{background:var(--orange);color:#fff}
+  .seg-btn.active:hover{background:var(--orange-dark)}
+  .count{background:rgba(0,0,0,.08);border-radius:999px;padding:1px 8px;font-size:12px}
+  .seg-btn.active .count{background:rgba(255,255,255,.28)}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--orange);color:#fff;border:none;border-radius:999px;
+    padding:11px 20px;font-size:15px;cursor:pointer;transition:background .15s ease;
+  }
+  .btn:hover{background:var(--orange-dark)}
+  .btn svg{width:17px;height:17px}
+  .btn.ghost{background:var(--white);color:var(--ink);box-shadow:var(--shadow)}
+  .btn.ghost:hover{background:#fdf8ef}
+  .btn.ghost svg{color:var(--orange)}
+  .btn.sm{padding:7px 14px;font-size:13.5px}
+
+  /* ---------- المؤشرات ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+  .kpi{
+    background:var(--white);border-radius:14px;box-shadow:var(--shadow);
+    padding:16px 18px;border-inline-start:5px solid var(--topbar);
+    text-align:start;border-top:none;border-bottom:none;border-inline-end:none;
+    cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;
+    font-size:inherit;color:inherit;
+  }
+  .kpi:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+  .kpi.gold{border-inline-start-color:var(--orange)}
+  .kpi.alert{border-inline-start-color:var(--danger);background:var(--danger-bg)}
+  .kpi.okc{border-inline-start-color:var(--ok)}
+  .kpi .k{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  .kpi .v{font-size:26px;font-weight:700;display:block;font-variant-numeric:tabular-nums}
+  .kpi.alert .v{color:var(--danger)}
+  .kpi .d{font-size:12.5px;margin-top:6px;display:flex;align-items:center;gap:4px;color:var(--muted)}
+  .up{color:var(--ok)!important}
+  .down{color:var(--danger)!important}
+
+  /* ---------- الشبكة ---------- */
+  .grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+  .grid>*{min-width:0}
+  .card{background:var(--white);border-radius:16px;box-shadow:var(--shadow);padding:18px 20px}
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .card-head h2{font-size:17px;color:var(--topbar)}
+  .card-head .sub{font-size:12.5px;color:var(--muted)}
+  .card-head .tools{margin-inline-start:auto}
+  .link{background:none;border:none;color:var(--orange-dark);font-size:13.5px;cursor:pointer;text-decoration:none}
+  .link:hover{text-decoration:underline}
+
+  /* ---------- الرسم البياني ---------- */
+  .chart-wrap{position:relative}
+  .chart-total{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .chart-total small{font-size:13px;color:var(--muted);font-weight:400;margin-inline-start:6px}
+  #chart{width:100%;height:240px;display:block;margin-top:8px;direction:ltr}
+  #chart .grid-line{stroke:var(--line);stroke-width:1}
+  #chart .axis{fill:var(--muted);font-size:11px;font-family:inherit}
+  #chart .bar{fill:var(--orange);transition:fill .1s}
+  #chart .bar.dim{fill:var(--orange-soft)}
+  #chart .hit{fill:transparent;cursor:pointer}
+  .tip{
+    position:absolute;pointer-events:none;background:var(--topbar);color:#fff;
+    border-radius:10px;padding:8px 12px;font-size:13px;white-space:nowrap;
+    transform:translate(50%,-100%);box-shadow:0 6px 16px rgba(0,0,0,.2);
+  }
+  .tip b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+  .tip[hidden]{display:none}
+
+  /* ---------- مزيج الطلبات ---------- */
+  .mix-bar{display:flex;height:14px;border-radius:999px;overflow:hidden;gap:2px;margin:6px 0 14px}
+  .mix-bar span{display:block;height:100%}
+  .legend{display:grid;gap:10px}
+  .legend-row{display:flex;align-items:center;gap:10px;font-size:14px}
+  .legend-row .sw{width:12px;height:12px;border-radius:4px;flex:none}
+  .legend-row .n{margin-inline-start:auto;font-weight:700;font-variant-numeric:tabular-nums}
+  .legend-row .p{color:var(--muted);font-size:12.5px;min-width:40px;text-align:end}
+  .divider{height:1px;background:var(--line);margin:16px 0}
+  .collect{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px}
+  .collect b{font-variant-numeric:tabular-nums}
+  .meter{height:10px;border-radius:999px;background:#f2ede6;overflow:hidden}
+  .meter span{display:block;height:100%;background:var(--ok);border-radius:999px}
+
+  /* ---------- مراحل الإنتاج ---------- */
+  .pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+  .stage{
+    position:relative;background:#faf6ef;border:2px solid transparent;border-radius:14px;
+    padding:14px 14px 12px;text-align:start;cursor:pointer;color:inherit;font-size:inherit;
+    transition:background .12s ease,border-color .12s ease;
+  }
+  .stage:hover{background:#f4ecdf}
+  .stage.active{border-color:var(--orange);background:#fff7ee}
+  .stage .sn{font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .stage .sn i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .stage .sv{font-size:28px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .stage .sl{font-size:12px;color:var(--danger);min-height:16px}
+  .stage-bar{height:6px;background:#eadfcd;border-radius:999px;margin-top:8px;overflow:hidden}
+  .stage-bar span{display:block;height:100%;border-radius:999px}
+
+  /* ---------- جدول الطلبات ---------- */
+  .orders{width:100%;border-collapse:collapse;font-size:14.5px}
+  .orders th{
+    text-align:start;font-weight:600;font-size:12.5px;color:var(--muted);
+    padding:0 10px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  .orders td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .orders tbody tr{cursor:pointer;transition:background .1s}
+  .orders tbody tr:hover{background:#fdf8ef}
+  .orders tbody tr:last-child td{border-bottom:none}
+  .num{font-variant-numeric:tabular-nums}
+  .oid{color:var(--muted);font-size:13px}
+  .cname{font-weight:600}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+    padding:3px 10px;font-size:12.5px;white-space:nowrap;background:#f2ede6;
+  }
+  .badge i{width:8px;height:8px;border-radius:50%}
+  .due-late{color:var(--danger);font-weight:600}
+  .due-soon{color:var(--warn);font-weight:600}
+  .empty{text-align:center;color:var(--muted);padding:26px 0;font-size:14px}
+  .table-scroll{overflow-x:auto}
+
+  /* ---------- المتابعات والأفضل ---------- */
+  .list{display:grid;gap:4px}
+  .item{
+    display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:12px;
+  }
+  .item:hover{background:#fdf8ef}
+  .avatar{
+    width:38px;height:38px;border-radius:50%;flex:none;
+    display:grid;place-items:center;font-weight:700;font-size:15px;
+    background:var(--orange-soft);color:var(--orange-dark);
+  }
+  .item .t{flex:1;min-width:0}
+  .item .t b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .t span{display:block;font-size:12.5px;color:var(--muted)}
+  .wa{
+    width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;flex:none;
+    background:#e7f6ec;color:#1f8a4c;display:grid;place-items:center;
+  }
+  .wa:hover{background:#d3efdd}
+  .wa svg{width:18px;height:18px}
+  .rank{font-size:12px;color:var(--muted);width:18px;text-align:center;flex:none}
+  .spend{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+  .spark{height:6px;background:#f2ede6;border-radius:999px;margin-top:6px;overflow:hidden}
+  .spark span{display:block;height:100%;background:var(--topbar);border-radius:999px}
+
+  /* ---------- نافذة الطلب ---------- */
+  .modal{
+    position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .modal[hidden]{display:none}
+  .sheet{
+    background:var(--white);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.25);
+    width:min(480px,100%);overflow:hidden;max-height:calc(100vh - 40px);overflow-y:auto;
+  }
+  .sheet-top{
+    background:var(--topbar);color:#fff;padding:16px 20px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sheet-top h3{font-size:17px}
+  .sheet-top .x{
+    margin-inline-start:auto;background:rgba(255,255,255,.14);color:#fff;border:none;
+    width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;
+  }
+  .sheet-body{padding:18px 20px 20px}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;font-size:14.5px}
+  .kv dt{color:var(--muted)}
+  .kv dd{font-weight:600}
+  .steps{display:flex;gap:4px;margin:18px 0 6px}
+  .steps span{flex:1;height:6px;border-radius:999px;background:#eadfcd}
+  .steps span.on{background:var(--orange)}
+  .steps-l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+  .sheet .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+  .form{display:grid;gap:12px}
+  .form label{display:grid;gap:6px;font-size:13.5px;color:var(--muted)}
+  .form input,.form select{
+    border:1px solid #e3dacb;border-radius:10px;padding:11px 14px;
+    font-family:inherit;font-size:15px;color:var(--ink);background:#fffdf9;outline:none;
+  }
+  .form input:focus,.form select:focus{border-color:var(--orange)}
+  .form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  .toast{
+    position:fixed;inset-inline:0;bottom:24px;margin:auto;width:max-content;max-width:90vw;
+    background:var(--topbar);color:#fff;border-radius:999px;padding:12px 26px;font-size:15px;
+    box-shadow:0 6px 20px rgba(0,0,0,.22);opacity:0;transform:translateY(12px);
+    transition:opacity .2s ease,transform .2s ease;pointer-events:none;z-index:80;
+  }
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  :focus-visible{outline:3px solid rgba(232,135,58,.55);outline-offset:2px}
+
+  @media (max-width:1000px){
+    .grid{grid-template-columns:1fr}
+    .pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+  @media (max-width:640px){
+    .content{padding:20px 16px 50px}
+    .head-actions{margin-inline-start:0;width:100%}
+    .head-actions .segmented{width:100%;justify-content:center}
+    .pipeline{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .orders .hide-sm{display:none}
+    .card-head .tools{margin-inline-start:0;width:100%}
+    .card-head .tools .segmented{width:100%;justify-content:center;flex-wrap:wrap}
+    .card{padding:16px 14px}
+    .form .two{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">Titan Print</div>
+
+<nav class="nav">
+  <div class="nav-row">
+    <a class="pill" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
+      تصميم
+    </a>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+      طباعة
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      متابعة
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      تواصل
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      إعدادات
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      الأقسام ▴
+    </button>
+  </div>
+
+  <div class="nav-row">
+    <a class="pill active" href="dashboard.html" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      لوحة
+    </a>
+    <a class="pill" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      كل الطلبات
+    </a>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      الجدولة
+    </button>
+    <a class="pill" href="customers.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      الزبائن
+    </a>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      المحاسبة
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+      المخزون
+    </button>
+    <button class="pill" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+      طلب ذكي
+    </button>
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="head">
+    <div>
+      <h1 class="page-title">لوحة التحكم</h1>
+      <p class="greet" id="greet"></p>
+    </div>
+    <div class="head-actions">
+      <div class="segmented" id="periodSeg" role="group" aria-label="الفترة">
+        <button class="seg-btn" type="button" data-value="7">7 أيام</button>
+        <button class="seg-btn active" type="button" data-value="30">30 يوماً</button>
+        <button class="seg-btn" type="button" data-value="90">90 يوماً</button>
+      </div>
+      <button class="btn" type="button" id="newOrderBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        طلب جديد
+      </button>
+    </div>
+  </div>
+
+  <!-- المؤشرات -->
+  <section class="kpis" id="kpis" aria-label="المؤشرات"></section>
+
+  <!-- المبيعات + مزيج الطلبات -->
+  <div class="grid">
+    <section class="card">
+      <div class="card-head">
+        <h2>المبيعات</h2>
+        <span class="sub" id="chartSub"></span>
+      </div>
+      <div class="chart-total" id="chartTotal"></div>
+      <div class="chart-wrap" id="chartWrap">
+        <svg id="chart" role="img" aria-label="رسم بياني للمبيعات"></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>توزيع الطلبات</h2><span class="sub" id="mixSub"></span></div>
+      <div class="mix-bar" id="mixBar"></div>
+      <div class="legend" id="mixLegend"></div>
+      <div class="divider"></div>
+      <div class="card-head" style="margin-bottom:10px"><h2>التحصيل</h2></div>
+      <div class="collect"><span>المحصَّل</span><b id="paidV"></b></div>
+      <div class="meter"><span id="paidBar"></span></div>
+      <div class="collect" style="margin-top:10px;color:var(--muted)"><span>المتبقي على الزبائن</span><b id="dueV"></b></div>
+    </section>
+  </div>
+
+  <!-- مراحل الإنتاج -->
+  <section class="card" style="margin-bottom:16px">
+    <div class="card-head">
+      <h2>مراحل الإنتاج</h2>
+      <span class="sub">اضغط على مرحلة لعرض طلباتها</span>
+      <div class="tools"><button class="link" type="button" id="clearStage" hidden>عرض الكل ✕</button></div>
+    </div>
+    <div class="pipeline" id="pipeline"></div>
+  </section>
+
+  <!-- الطلبات + الجانب -->
+  <div class="grid">
+    <section class="card">
+      <div class="card-head">
+        <h2 id="ordersTitle">الطلبات الجارية</h2>
+        <div class="tools">
+          <div class="segmented" id="ordersSeg" role="group" aria-label="ترتيب الطلبات">
+            <button class="seg-btn active" type="button" data-value="due">الأقرب تسليماً</button>
+            <button class="seg-btn" type="button" data-value="new">الأحدث</button>
+            <button class="seg-btn" type="button" data-value="value">الأعلى قيمة</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="orders">
+          <thead>
+            <tr>
+              <th>الطلب</th>
+              <th>الزبون</th>
+              <th class="hide-sm">النوع</th>
+              <th>المرحلة</th>
+              <th>التسليم</th>
+              <th class="hide-sm">المبلغ</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div style="display:grid;gap:16px;align-content:start">
+      <section class="card">
+        <div class="card-head">
+          <h2>متابعات اليوم</h2>
+          <div class="tools"><a class="link" href="customers.html">كل الزبائن ←</a></div>
+        </div>
+        <div class="list" id="followups"></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>أفضل الزبائن</h2><span class="sub" id="topSub"></span></div>
+        <div class="list" id="topCustomers"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- نافذة تفاصيل الطلب -->
+<div class="modal" id="orderModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="omTitle">
+    <div class="sheet-top">
+      <h3 id="omTitle"></h3>
+      <span class="badge" id="omBadge" style="background:rgba(255,255,255,.14);color:#fff"></span>
+      <button class="x" type="button" data-close aria-label="إغلاق">×</button>
+    </div>
+    <div class="sheet-body">
+      <dl class="kv" id="omKv"></dl>
+      <div class="steps" id="omSteps"></div>
+      <div class="steps-l" id="omStepsL"></div>
+      <div class="row">
+        <button class="btn" type="button" id="omAdvance"></button>
+        <button class="btn ghost" type="button" id="omCopy">نسخ البيانات</button>
+        <button class="btn ghost" type="button" id="omWa">واتساب</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة طلب جديد -->
+<div class="modal" id="newModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="nmTitle">
+    <div class="sheet-top">
+      <h3 id="nmTitle">طلب جديد</h3>
+      <button class="x" type="button" data-close aria-label="إغلاق">×</button>
+    </div>
+    <form class="sheet-body form" id="newForm">
+      <label>اسم الزبون<input name="customer" required list="custList" autocomplete="off"></label>
+      <datalist id="custList"></datalist>
+      <div class="two">
+        <label>الجوال<input name="phone" inputmode="tel" required></label>
+        <label>النوع
+          <select name="type">
+            <option value="clothes">ملابس</option>
+            <option value="packaging">تغليف</option>
+            <option value="print">مطبوعات</option>
+            <option value="signage">لافتات</option>
+          </select>
+        </label>
+      </div>
+      <div class="two">
+        <label>المبلغ (₪)<input name="total" type="number" min="0" required></label>
+        <label>المدفوع (₪)<input name="paid" type="number" min="0" value="0"></label>
+      </div>
+      <label>موعد التسليم<input name="due" type="date" required></label>
+      <div class="row" style="margin-top:4px">
+        <button class="btn" type="submit">إضافة الطلب</button>
+        <button class="btn ghost" type="button" data-close>إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const CURRENCY = "₪";
+  const DAY = 864e5;
+  const TODAY = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+
+  // مراحل الإنتاج — بالترتيب
+  const STAGES = [
+    { key: "design",   label: "تصميم",          color: "#6b5ca5" },
+    { key: "approval", label: "بانتظار الموافقة", color: "#c9912b" },
+    { key: "print",    label: "طباعة",          color: "#e8873a" },
+    { key: "finish",   label: "تشطيب وتغليف",   color: "#0d3b3f" },
+    { key: "ready",    label: "جاهز للتسليم",    color: "#2e7d32" }
+  ];
+  const STAGE_IDX = Object.fromEntries(STAGES.map((s, i) => [s.key, i]));
+
+  const TYPES = {
+    clothes:   { label: "ملابس",    color: "#e8873a" },
+    packaging: { label: "تغليف",    color: "#0d3b3f" },
+    print:     { label: "مطبوعات",  color: "#6b5ca5" },
+    signage:   { label: "لافتات",   color: "#c9912b" }
+  };
+
+  const CUSTOMERS = [
+    { name: "أيمن الفحماوي", phone: "0599123456", city: "الطيرة ـ المثلث" },
+    { name: "مؤسسة النخبة",  phone: "0598112233", city: "نابلس ـ رفيديا" },
+    { name: "أحمد الزهراني", phone: "0569555111", city: "رام الله ـ الماصيون" },
+    { name: "متجر الواحة",   phone: "0592244668", city: "الخليل ـ عين سارة" },
+    { name: "شركة الأفق",    phone: "0597788990", city: "جنين ـ الحديقة" },
+    { name: "نادي الرواد",   phone: "0594455667", city: "طولكرم ـ المركز" },
+    { name: "سالم القحطاني", phone: "0591122334", city: "بيت لحم ـ المهد" },
+    { name: "مخابز السنابل", phone: "0596677889", city: "قلقيلية ـ الشارع الرئيسي" },
+    { name: "صيدلية الشفاء", phone: "0593344556", city: "نابلس ـ المخفية" },
+    { name: "مطعم الديوان",  phone: "0595566778", city: "رام الله ـ الطيرة" }
+  ];
+
+  // ---------- بيانات تجريبية (مولّدة بشكل ثابت نسبةً لليوم) ----------
+  // استبدل buildSeed() بمصدر الطلبات الحقيقي. الحقول المطلوبة موضّحة في README.
+  function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+  function buildSeed() {
+    const r = rng(20260929);
+    const typeKeys = Object.keys(TYPES);
+    const orders = [];
+    let id = 10400;
+    for (let back = 119; back >= 0; back--) {
+      const perDay = Math.floor(r() * 3.2) + (back % 7 === 5 ? 0 : 1); // يوم الجمعة أخف
+      for (let k = 0; k < perDay; k++) {
+        const c = CUSTOMERS[Math.floor(Math.pow(r(), 1.6) * CUSTOMERS.length)];
+        const type = typeKeys[Math.floor(r() * typeKeys.length)];
+        const total = Math.round((150 + r() * r() * 2600) / 10) * 10;
+        const created = new Date(TODAY.getTime() - back * DAY);
+        const due = new Date(created.getTime() + (3 + Math.floor(r() * 10)) * DAY);
+        let stage;
+        if (back > 14) stage = "delivered";
+        else {
+          const progress = Math.min(4, Math.floor((14 - back) * 0.25 + r() * 2.4));
+          stage = back > 9 && r() > .45 ? "delivered" : STAGES[4 - progress].key;
+        }
+        const paid = stage === "delivered"
+          ? (r() > .12 ? total : Math.round(total * .5))
+          : Math.round(total * [0, .3, .5][Math.floor(r() * 3)]);
+        orders.push({
+          id: id++, customer: c.name, phone: c.phone, address: c.city, type,
+          stage, total, paid, createdAt: iso(created), due: iso(due)
+        });
+      }
+    }
+    return orders;
+  }
+
+  // ---------- الحالة ----------
+  const STORE_KEY = "titan_dashboard_v1";
+  const state = { period: 30, stage: null, sort: "due" };
+  let ORDERS = load() || buildSeed();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      return data.day === iso(TODAY) ? data.orders : null; // البيانات التجريبية تتجدد يومياً
+    } catch { return null; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ day: iso(TODAY), orders: ORDERS })); } catch {}
+  }
+
+  // ---------- أدوات ----------
+  function iso(d) {
+    const p = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const daysFromToday = s => Math.round((parse(s) - TODAY) / DAY);
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  const money = n => `${fmt(n)} ${CURRENCY}`;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const $ = id => document.getElementById(id);
+  const AR_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  const AR_DAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  const shortDate = d => `${d.getDate()} ${AR_MONTHS[d.getMonth()]}`;
+
+  const inRange = (o, from, to) => { const t = parse(o.createdAt); return t >= from && t < to; };
+  const isOpen = o => o.stage !== "delivered";
+
+  function periodRange(offset = 0) {
+    const end = new Date(TODAY.getTime() + DAY - offset * state.period * DAY);
+    const start = new Date(end.getTime() - state.period * DAY);
+    return [start, end];
+  }
+
+  function dueLabel(o) {
+    const d = daysFromToday(o.due);
+    if (d < 0) return { text: `متأخر ${-d} ${-d === 1 ? "يوم" : "أيام"}`, cls: "due-late" };
+    if (d === 0) return { text: "اليوم", cls: "due-soon" };
+    if (d === 1) return { text: "غداً", cls: "due-soon" };
+    return { text: shortDate(parse(o.due)), cls: "" };
+  }
+
+  function delta(cur, prev) {
+    if (!prev) return "";
+    const p = ((cur - prev) / prev) * 100;
+    const up = p >= 0;
+    return `<span class="d"><span class="${up ? "up" : "down"}">${up ? "▲" : "▼"} ${Math.abs(p).toFixed(0)}%</span> عن الفترة السابقة</span>`;
+  }
+
+  // ---------- العرض ----------
+  function renderGreeting() {
+    const h = new Date().getHours();
+    const hello = h < 12 ? "صباح الخير" : "مساء الخير";
+    $("greet").textContent = `${hello} — ${AR_DAYS[TODAY.getDay()]} ${shortDate(TODAY)} ${TODAY.getFullYear()}`;
+  }
+
+  function renderKpis() {
+    const [s, e] = periodRange(0);
+    const [ps, pe] = periodRange(1);
+    const cur = ORDERS.filter(o => inRange(o, s, e));
+    const prev = ORDERS.filter(o => inRange(o, ps, pe));
+    const sales = cur.reduce((a, o) => a + o.total, 0);
+    const prevSales = prev.reduce((a, o) => a + o.total, 0);
+    const open = ORDERS.filter(isOpen);
+    const late = open.filter(o => daysFromToday(o.due) < 0);
+    const dueToday = open.filter(o => daysFromToday(o.due) === 0);
+    const avg = cur.length ? sales / cur.length : 0;
+    const prevAvg = prev.length ? prevSales / prev.length : 0;
+
+    $("kpis").innerHTML = `
+      <button class="kpi gold" type="button" data-kpi="sales">
+        <span class="k">مبيعات آخر ${state.period} يوماً</span>
+        <span class="v">${money(sales)}</span>${delta(sales, prevSales)}
+      </button>
+      <button class="kpi" type="button" data-kpi="orders">
+        <span class="k">عدد الطلبات</span>
+        <span class="v">${fmt(cur.length)}</span>${delta(cur.length, prev.length)}
+      </button>
+      <button class="kpi" type="button" data-kpi="avg">
+        <span class="k">متوسط قيمة الطلب</span>
+        <span class="v">${money(avg)}</span>${delta(avg, prevAvg)}
+      </button>
+      <button class="kpi okc" type="button" data-kpi="open">
+        <span class="k">طلبات قيد التنفيذ</span>
+        <span class="v">${open.length}</span>
+        <span class="d">${dueToday.length} تسليم اليوم</span>
+      </button>
+      <button class="kpi ${late.length ? "alert" : ""}" type="button" data-kpi="late">
+        <span class="k">طلبات متأخرة</span>
+        <span class="v">${late.length}</span>
+        <span class="d">${late.length ? "تحتاج متابعة فورية" : "لا يوجد تأخير 👌"}</span>
+      </button>`;
+  }
+
+  function buckets() {
+    // يومي لـ 7 و 30، أسبوعي لـ 90
+    const size = state.period === 90 ? 7 : 1;
+    const n = state.period / size;
+    const out = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const end = new Date(TODAY.getTime() + DAY - i * size * DAY);
+      const start = new Date(end.getTime() - size * DAY);
+      const list = ORDERS.filter(o => inRange(o, start, end));
+      out.push({
+        start, end: new Date(end.getTime() - DAY),
+        value: list.reduce((a, o) => a + o.total, 0), count: list.length
+      });
+    }
+    return { size, out };
+  }
+
+  function niceMax(v) {
+    if (v <= 0) return 100;
+    const mag = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  }
+
+  function renderChart() {
+    const { size, out } = buckets();
+    const total = out.reduce((a, b) => a + b.value, 0);
+    $("chartTotal").innerHTML = `${money(total)}<small>${size === 7 ? "تجميع أسبوعي" : "تجميع يومي"}</small>`;
+    $("chartSub").textContent = `${shortDate(out[0].start)} — ${shortDate(out[out.length - 1].end)}`;
+
+    const svg = $("chart");
+    const W = svg.clientWidth || 700, H = 240;
+    const padL = 8, padR = 46, padT = 10, padB = 26;
+    const iw = W - padL - padR, ih = H - padT - padB;
+    const max = niceMax(Math.max(...out.map(b => b.value)));
+    const slot = iw / out.length;
+    const bw = Math.max(3, Math.min(34, slot * .62));
+    // RTL: الأقدم على اليمين، الأحدث على اليسار
+    const x = i => padL + iw - (i + 1) * slot + (slot - bw) / 2;
+    const y = v => padT + ih - (v / max) * ih;
+
+    let g = "";
+    for (let t = 0; t <= 4; t++) {
+      const v = (max / 4) * t, yy = y(v);
+      g += `<line class="grid-line" x1="${padL}" x2="${padL + iw}" y1="${yy}" y2="${yy}"/>`;
+      g += `<text class="axis" x="${W - 4}" y="${yy + 4}" text-anchor="end">${v >= 1000 ? (v / 1000) + "k" : v}</text>`;
+    }
+    const step = Math.ceil(out.length / Math.max(3, Math.floor(iw / 80)));
+    out.forEach((b, i) => {
+      const h = Math.max(b.value ? 2 : 0, padT + ih - y(b.value));
+      g += `<rect class="bar" data-i="${i}" x="${x(i)}" y="${padT + ih - h}" width="${bw}" height="${h}" rx="${Math.min(4, bw / 3)}"/>`;
+      if ((out.length - 1 - i) % step === 0) {
+        const label = state.period === 7 ? AR_DAYS[b.start.getDay()] : shortDate(b.start);
+        g += `<text class="axis" x="${x(i) + bw / 2}" y="${H - 6}" text-anchor="middle">${label}</text>`;
+      }
+      g += `<rect class="hit" data-i="${i}" x="${padL + iw - (i + 1) * slot}" y="${padT}" width="${slot}" height="${ih}"/>`;
+    });
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.innerHTML = g;
+
+    const tip = $("tip");
+    svg.onmousemove = (e) => {
+      const hit = e.target.closest(".hit");
+      if (!hit) return hideTip();
+      const i = +hit.dataset.i, b = out[i];
+      svg.querySelectorAll(".bar").forEach(r => r.classList.toggle("dim", +r.dataset.i !== i));
+      const range = size === 7 ? `${shortDate(b.start)} — ${shortDate(b.end)}` : `${AR_DAYS[b.start.getDay()]} ${shortDate(b.start)}`;
+      tip.innerHTML = `<b>${money(b.value)}</b>${range} · ${b.count} طلب`;
+      const box = svg.getBoundingClientRect();
+      const bx = (x(i) + bw / 2) / W * box.width;
+      tip.style.left = `${bx}px`;
+      tip.style.right = "auto";
+      tip.style.top = `${y(b.value) / H * box.height - 8}px`;
+      tip.style.transform = `translate(${bx > box.width - 90 ? "-100%" : bx < 90 ? "0" : "-50%"},-100%)`;
+      tip.hidden = false;
+    };
+    svg.onmouseleave = hideTip;
+    function hideTip() {
+      tip.hidden = true;
+      svg.querySelectorAll(".bar").forEach(r => r.classList.remove("dim"));
+    }
+  }
+
+  function renderMix() {
+    const [s, e] = periodRange(0);
+    const cur = ORDERS.filter(o => inRange(o, s, e));
+    const counts = Object.keys(TYPES).map(k => ({ k, n: cur.filter(o => o.type === k).length }))
+      .sort((a, b) => b.n - a.n);
+    const total = cur.length || 1;
+    $("mixSub").textContent = `${cur.length} طلب`;
+    $("mixBar").innerHTML = counts.map(c =>
+      `<span style="width:${c.n / total * 100}%;background:${TYPES[c.k].color}" title="${TYPES[c.k].label}: ${c.n}"></span>`).join("");
+    $("mixLegend").innerHTML = counts.map(c => `
+      <div class="legend-row">
+        <span class="sw" style="background:${TYPES[c.k].color}"></span>
+        <span>${TYPES[c.k].label}</span>
+        <span class="n">${c.n}</span>
+        <span class="p">${Math.round(c.n / total * 100)}%</span>
+      </div>`).join("");
+
+    const sum = cur.reduce((a, o) => a + o.total, 0);
+    const paid = cur.reduce((a, o) => a + o.paid, 0);
+    $("paidV").textContent = `${money(paid)} (${sum ? Math.round(paid / sum * 100) : 0}%)`;
+    $("paidBar").style.width = `${sum ? paid / sum * 100 : 0}%`;
+    $("dueV").textContent = money(sum - paid);
+  }
+
+  function renderPipeline() {
+    const open = ORDERS.filter(isOpen);
+    const max = Math.max(1, ...STAGES.map(s => open.filter(o => o.stage === s.key).length));
+    $("pipeline").innerHTML = STAGES.map(s => {
+      const list = open.filter(o => o.stage === s.key);
+      const late = list.filter(o => daysFromToday(o.due) < 0).length;
+      return `
+        <button class="stage ${state.stage === s.key ? "active" : ""}" type="button" data-stage="${s.key}"
+                aria-pressed="${state.stage === s.key}">
+          <span class="sn"><i style="background:${s.color}"></i>${s.label}</span>
+          <div class="sv">${list.length}</div>
+          <div class="sl">${late ? `${late} متأخر` : ""}</div>
+          <div class="stage-bar"><span style="width:${list.length / max * 100}%;background:${s.color}"></span></div>
+        </button>`;
+    }).join("");
+    $("clearStage").hidden = !state.stage;
+  }
+
+  function stageBadge(key) {
+    if (key === "delivered") return `<span class="badge"><i style="background:#8a8178"></i>تم التسليم</span>`;
+    const s = STAGES[STAGE_IDX[key]];
+    return `<span class="badge"><i style="background:${s.color}"></i>${s.label}</span>`;
+  }
+
+  function renderOrders() {
+    let list = ORDERS.filter(isOpen);
+    if (state.stage === "late") list = list.filter(o => daysFromToday(o.due) < 0);
+    else if (state.stage) list = list.filter(o => o.stage === state.stage);
+    const sorters = {
+      due:   (a, b) => parse(a.due) - parse(b.due),
+      new:   (a, b) => parse(b.createdAt) - parse(a.createdAt) || b.id - a.id,
+      value: (a, b) => b.total - a.total
+    };
+    list.sort(sorters[state.sort]);
+
+    $("ordersTitle").textContent = state.stage === "late" ? "الطلبات المتأخرة"
+      : state.stage ? `طلبات: ${STAGES[STAGE_IDX[state.stage]].label}` : "الطلبات الجارية";
+
+    $("ordersBody").innerHTML = list.length ? list.slice(0, 12).map(o => {
+      const d = dueLabel(o);
+      return `
+        <tr data-id="${o.id}" tabindex="0">
+          <td class="oid num">#${o.id}</td>
+          <td class="cname">${esc(o.customer)}</td>
+          <td class="hide-sm">${TYPES[o.type].label}</td>
+          <td>${stageBadge(o.stage)}</td>
+          <td class="${d.cls}">${d.text}</td>
+          <td class="hide-sm num">${money(o.total)}</td>
+        </tr>`;
+    }).join("") + (list.length > 12 ? `<tr><td colspan="6" class="empty"><a class="link" href="index.html">+ ${list.length - 12} طلبات أخرى — عرض كل الطلبات</a></td></tr>` : "")
+      : `<tr><td colspan="6" class="empty">لا توجد طلبات في هذه المرحلة</td></tr>`;
+  }
+
+  function customerStats() {
+    return CUSTOMERS.map(c => {
+      const orders = ORDERS.filter(o => o.customer === c.name).sort((a, b) => parse(a.createdAt) - parse(b.createdAt));
+      const dates = orders.map(o => parse(o.createdAt));
+      const gaps = dates.slice(1).map((d, i) => (d - dates[i]) / DAY).filter(g => g > 0);
+      const cycle = gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : null;
+      const last = dates[dates.length - 1];
+      const since = last ? Math.round((TODAY - last) / DAY) : null;
+      return { ...c, orders, cycle, since, overdue: cycle && since != null ? since - cycle : null };
+    });
+  }
+
+  function renderSide() {
+    const stats = customerStats();
+    const initial = n => esc(n.trim().charAt(0));
+    const waIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-3.2-.7-2.7-1.1-4.4-3.8-4.5-4-.1-.2-1.1-1.4-1.1-2.7s.7-1.9.9-2.2c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.7-.1 1.3z"/></svg>`;
+
+    // من تجاوز دورته المعتادة للطلب أو من لديه طلب جاهز للتسليم
+    const ready = ORDERS.filter(o => o.stage === "ready");
+    const items = [
+      ...ready.slice(0, 3).map(o => ({ name: o.customer, phone: o.phone, why: `طلب #${o.id} جاهز للتسليم`, msg: `مرحباً ${o.customer}، طلبكم رقم ${o.id} جاهز للاستلام من Titan Print.` })),
+      ...stats.filter(s => s.overdue != null && s.overdue > 0).sort((a, b) => b.overdue - a.overdue).slice(0, 3)
+        .map(s => ({ name: s.name, phone: s.phone, why: `آخر طلب قبل ${s.since} يوماً (دورته ~${Math.round(s.cycle)})`, msg: `مرحباً ${s.name}، نتمنى أن تكونوا بخير 🌟 هل تحتاجون طلبية جديدة من Titan Print؟` }))
+    ];
+    $("followups").innerHTML = items.length ? items.map((it, i) => `
+      <div class="item">
+        <span class="avatar">${initial(it.name)}</span>
+        <span class="t"><b>${esc(it.name)}</b><span>${esc(it.why)}</span></span>
+        <button class="wa" type="button" data-wa="${i}" aria-label="واتساب ${esc(it.name)}">${waIcon}</button>
+      </div>`).join("") : `<div class="empty">لا توجد متابعات اليوم</div>`;
+    $("followups").onclick = (e) => {
+      const b = e.target.closest("[data-wa]");
+      if (b) openWa(items[+b.dataset.wa].phone, items[+b.dataset.wa].msg);
+    };
+
+    const [s, e] = periodRange(0);
+    $("topSub").textContent = `آخر ${state.period} يوماً`;
+    const top = stats.map(c => ({ ...c, spend: c.orders.filter(o => inRange(o, s, e)).reduce((a, o) => a + o.total, 0) }))
+      .filter(c => c.spend > 0).sort((a, b) => b.spend - a.spend).slice(0, 5);
+    const max = top[0]?.spend || 1;
+    $("topCustomers").innerHTML = top.map((c, i) => `
+      <div class="item">
+        <span class="rank">${i + 1}</span>
+        <span class="t"><b>${esc(c.name)}</b><div class="spark"><span style="width:${c.spend / max * 100}%"></span></div></span>
+        <span class="spend">${money(c.spend)}</span>
+      </div>`).join("") || `<div class="empty">لا توجد مبيعات</div>`;
+  }
+
+  function renderAll() {
+    renderKpis(); renderChart(); renderMix(); renderPipeline(); renderOrders(); renderSide();
+  }
+
+  // ---------- نافذة الطلب ----------
+  let current = null;
+  function openOrder(id) {
+    const o = ORDERS.find(x => x.id === id);
+    if (!o) return;
+    current = o;
+    $("omTitle").textContent = `طلب #${o.id}`;
+    $("omBadge").textContent = o.stage === "delivered" ? "تم التسليم" : STAGES[STAGE_IDX[o.stage]].label;
+    const d = dueLabel(o);
+    $("omKv").innerHTML = `
+      <dt>الزبون</dt><dd>${esc(o.customer)}</dd>
+      <dt>الجوال</dt><dd class="num" dir="ltr" style="text-align:end">${esc(o.phone)}</dd>
+      <dt>العنوان</dt><dd>${esc(o.address)}</dd>
+      <dt>النوع</dt><dd>${TYPES[o.type].label}</dd>
+      <dt>المبلغ</dt><dd>${money(o.total)}</dd>
+      <dt>المدفوع</dt><dd>${money(o.paid)} <span style="color:var(--muted);font-weight:400">· المتبقي ${money(o.total - o.paid)}</span></dd>
+      <dt>التسليم</dt><dd class="${d.cls}">${d.text}</dd>`;
+    const idx = o.stage === "delivered" ? STAGES.length : STAGE_IDX[o.stage];
+    $("omSteps").innerHTML = STAGES.map((_, i) => `<span class="${i <= idx ? "on" : ""}"></span>`).join("");
+    $("omStepsL").innerHTML = `<span>${STAGES[0].label}</span><span>${STAGES[STAGES.length - 1].label}</span>`;
+    const adv = $("omAdvance");
+    if (o.stage === "delivered") { adv.hidden = true; }
+    else {
+      adv.hidden = false;
+      adv.textContent = o.stage === "ready" ? "تم التسليم ✓" : `نقل إلى: ${STAGES[idx + 1].label}`;
+    }
+    openModal("orderModal");
+  }
+
+  $("omAdvance").onclick = () => {
+    if (!current) return;
+    const idx = STAGE_IDX[current.stage];
+    current.stage = current.stage === "ready" ? "delivered" : STAGES[idx + 1].key;
+    save();
+    toast(current.stage === "delivered" ? `تم تسليم الطلب #${current.id}` : `الطلب #${current.id} ← ${STAGES[STAGE_IDX[current.stage]].label}`);
+    renderAll();
+    openOrder(current.id);
+  };
+
+  $("omCopy").onclick = async () => {
+    const o = current;
+    const text = `الاسم: ${o.customer}\nالجوال: ${o.phone}\nالعنوان: ${o.address}\nالمبلغ: ${o.total} ${CURRENCY}\nالمتبقي: ${o.total - o.paid} ${CURRENCY}`;
+    const ok = await copy(text);
+    const b = $("omCopy");
+    if (ok) {
+      b.textContent = "تم النسخ ✓";
+      setTimeout(() => (b.textContent = "نسخ البيانات"), 2000);
+      toast("تم نسخ بيانات الطلب");
+    } else toast("تعذّر النسخ");
+  };
+  $("omWa").onclick = () => current && openWa(current.phone,
+    `مرحباً ${current.customer}، بخصوص طلبكم رقم ${current.id} لدى Titan Print.`);
+
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand("copy"); ta.remove(); return ok;
+    } catch { return false; }
+  }
+
+  function openWa(phone, msg) {
+    const intl = "970" + String(phone).replace(/\D/g, "").replace(/^0/, "");
+    window.open(`https://wa.me/${intl}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+  }
+
+  // ---------- طلب جديد ----------
+  $("custList").innerHTML = CUSTOMERS.map(c => `<option value="${esc(c.name)}">`).join("");
+  $("newOrderBtn").onclick = () => {
+    const f = $("newForm");
+    f.reset();
+    f.due.value = iso(new Date(TODAY.getTime() + 5 * DAY));
+    openModal("newModal");
+    f.customer.focus();
+  };
+  $("newForm").customer.addEventListener("change", (e) => {
+    const c = CUSTOMERS.find(x => x.name === e.target.value);
+    if (c) $("newForm").phone.value = c.phone;
+  });
+  $("newForm").onsubmit = (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const c = CUSTOMERS.find(x => x.name === f.customer.value.trim());
+    const total = +f.total.value;
+    const o = {
+      id: Math.max(...ORDERS.map(x => x.id)) + 1,
+      customer: f.customer.value.trim(), phone: f.phone.value.trim(),
+      address: c ? c.city : "—", type: f.type.value, stage: "design",
+      total, paid: Math.min(total, +f.paid.value || 0),
+      createdAt: iso(TODAY), due: f.due.value
+    };
+    if (!c) CUSTOMERS.push({ name: o.customer, phone: o.phone, city: "—" });
+    ORDERS.push(o);
+    save();
+    closeModals();
+    state.stage = null; state.sort = "new";
+    setSeg("ordersSeg", "new");
+    renderAll();
+    toast(`تمت إضافة الطلب #${o.id}`);
+  };
+
+  // ---------- النوافذ ----------
+  let lastFocus = null;
+  function openModal(id) { lastFocus = document.activeElement; $(id).hidden = false; $(id).querySelector("button,input")?.focus(); }
+  function closeModals() {
+    document.querySelectorAll(".modal").forEach(m => (m.hidden = true));
+    lastFocus?.focus?.();
+  }
+  document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", (e) => {
+    if (e.target === m || e.target.closest("[data-close]")) closeModals();
+  }));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModals();
+    if (e.key.toLowerCase() === "n" && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)
+        && document.querySelectorAll(".modal:not([hidden])").length === 0) {
+      e.preventDefault(); $("newOrderBtn").click();
+    }
+  });
+
+  let toastT;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  // ---------- الأحداث ----------
+  function setSeg(id, value) {
+    $(id).querySelectorAll(".seg-btn").forEach(b => b.classList.toggle("active", b.dataset.value === value));
+  }
+  function bindSeg(id, fn) {
+    $(id).addEventListener("click", (e) => {
+      const b = e.target.closest(".seg-btn");
+      if (!b) return;
+      setSeg(id, b.dataset.value);
+      fn(b.dataset.value);
+    });
+  }
+  bindSeg("periodSeg", v => { state.period = +v; renderKpis(); renderChart(); renderMix(); renderSide(); });
+  bindSeg("ordersSeg", v => { state.sort = v; renderOrders(); });
+
+  $("pipeline").addEventListener("click", (e) => {
+    const b = e.target.closest(".stage");
+    if (!b) return;
+    state.stage = state.stage === b.dataset.stage ? null : b.dataset.stage;
+    renderPipeline(); renderOrders();
+  });
+  $("clearStage").onclick = () => { state.stage = null; renderPipeline(); renderOrders(); };
+
+  $("kpis").addEventListener("click", (e) => {
+    const k = e.target.closest("[data-kpi]")?.dataset.kpi;
+    if (k === "late") { state.stage = "late"; renderPipeline(); renderOrders(); scrollToOrders(); }
+    else if (k === "open") { state.stage = null; setSeg("ordersSeg", "due"); state.sort = "due"; renderPipeline(); renderOrders(); scrollToOrders(); }
+    else if (k) $("chartWrap").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+  function scrollToOrders() { $("ordersBody").closest(".card").scrollIntoView({ behavior: "smooth", block: "start" }); }
+
+  $("ordersBody").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-id]");
+    if (tr) openOrder(+tr.dataset.id);
+  });
+  $("ordersBody").addEventListener("keydown", (e) => {
+    const tr = e.target.closest("tr[data-id]");
+    if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openOrder(+tr.dataset.id); }
+  });
+
+  let rT;
+  window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(renderChart, 120); });
+
+  renderGreeting();
+  renderAll();
+})();
+</script>
+</body>
+</html>
