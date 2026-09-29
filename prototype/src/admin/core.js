@@ -1,7 +1,10 @@
 /* Titan Pack dashboard — core: state, roles, draft → preview → publish, versions, media ingest and UI primitives.
    Pages register themselves in PAGES (pages.js); the assistant lives in assistant.js. */
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const esc=tpEsc, K=TPCMS.K, BASE=TPCMS.BASE, clone=TPCMS.clone, J=o=>JSON.stringify(o);
+const esc=tpEsc, K=TPCMS.K, BASE=TPCMS.BASE, clone=TPCMS.clone;
+/* stable JSON: the database (jsonb) returns object keys in its own order, so compare with sorted keys */
+const canon=v=>Array.isArray(v)?v.map(canon):v&&typeof v==="object"?Object.keys(v).sort().reduce((o,k)=>(o[k]=canon(v[k]),o),{}):v;
+const J=o=>JSON.stringify(canon(o));
 const uid=p=>p+Date.now().toString(36).slice(-4)+Math.random().toString(36).slice(2,6);
 const debounce=(f,ms)=>{let t;const d=(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)};d.flush=(...a)=>{clearTimeout(t);f(...a)};return d};
 const UI=Object.assign({theme:"auto",lang:"ar",device:"desktop"},TPCMS.get("tp-admin-ui")||{});
@@ -159,18 +162,22 @@ async function publish(){
  if(!guard("publish"))return;
  if(status()==="unsaved")saveDraft(true);
  const d=draftP()||S.work,ch=diff(liveP(),d);
- if(!ch.length){toast("لا توجد تغييرات للنشر");return}
+ const note=await askPublish(ch);if(note==null)return;
+ const vs=TPCMS.get(K.versions)||[],n=(vs[0]?vs[0].v:0)+1;
+ vs.unshift({v:n,at:Date.now(),by:S.user.name,role:S.user.role,note,changes:ch.map(c=>c.t),snapshot:clone(d)});
+ while(!TPCMS.put(K.versions,vs)&&vs.length>3)vs.pop();
+ TPCMS.put(K.live,d); setMeta({liveAt:Date.now(),liveBy:S.user.name,liveV:n}); refreshSnap();
+ mark("publish",`نشر الإصدار v${n}`); toast(`تم النشر — الإصدار v${n} على الموقع الآن`,"ok"); render();
+}
+/* confirmation dialog listing the changes; resolves to the version note, or null when cancelled / nothing to publish */
+async function askPublish(ch){
+ if(!ch.length){toast("لا توجد تغييرات للنشر");return null}
  const v=await modal({title:"نشر التغييرات على الموقع",body:`<p class="muted">ستنتقل هذه التغييرات من المسودة إلى الموقع المنشور، ويُحفظ إصدار جديد يمكن استعادته لاحقاً.</p>
   <ul class="changes">${ch.map(c=>`<li><span class="mono">${esc(c.k)}</span>${esc(c.t)}</li>`).join("")}</ul>
   <div class="fld"><label for="pubNote">وصف الإصدار</label><input id="pubNote" placeholder="مثال: تحديث الواجهة وإضافة مشروع جديد" maxlength="120"></div>`,
   actions:[{label:"إلغاء",value:null,cls:"btn-quiet"},{label:`نشر ${ch.length} تغيير`,value:"ok",cls:"btn-accent"}],
   read:()=>$("#pubNote").value.trim()});
- if(!v)return;
- const vs=TPCMS.get(K.versions)||[],n=(vs[0]?vs[0].v:0)+1;
- vs.unshift({v:n,at:Date.now(),by:S.user.name,role:S.user.role,note:v.read||ch.slice(0,2).map(c=>c.t).join("، "),changes:ch.map(c=>c.t),snapshot:clone(d)});
- while(!TPCMS.put(K.versions,vs)&&vs.length>3)vs.pop();
- TPCMS.put(K.live,d); setMeta({liveAt:Date.now(),liveBy:S.user.name,liveV:n}); refreshSnap();
- mark("publish",`نشر الإصدار v${n}`); toast(`تم النشر — الإصدار v${n} على الموقع الآن`,"ok"); render();
+ return v?(v.read||ch.slice(0,2).map(c=>c.t).join("، ")):null;
 }
 async function restoreVersion(n){
  if(!guard("restore"))return;

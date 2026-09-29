@@ -5,8 +5,8 @@ d = Path(__file__).parent; s = d / "src"
 read = lambda *names: "\n".join((s / n).read_text(encoding="utf-8") for n in names)
 head = '<!doctype html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
 pages = {
-    "index.html": ("shell.html", ["tokens.css", "styles.css"], ["shared.js", "cms.js", "app.js"]),
-    "admin.html": ("admin/shell.html", ["tokens.css", "admin/admin.css"], ["shared.js", "cms.js", "admin/core.js", "admin/pages.js", "admin/assistant.js"]),
+    "index.html": ("shell.html", ["tokens.css", "styles.css"], ["config.js", "shared.js", "cms.js", "app.js"]),
+    "admin.html": ("admin/shell.html", ["tokens.css", "admin/admin.css"], ["config.js", "shared.js", "cms.js", "admin/core.js", "admin/pages.js", "admin/remote.js", "admin/assistant.js"]),
 }
 for out_name, (shell, css, js) in pages.items():
     page = read(shell)

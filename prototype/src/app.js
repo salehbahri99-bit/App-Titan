@@ -166,10 +166,16 @@ function renderContact(){
  ["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("over")}));
  drop.addEventListener("drop",ev=>addFiles([...ev.dataTransfer.files]));
  drawFiles();
- $("#cf").onsubmit=e=>{e.preventDefault();if(validate()){const fd=Object.fromEntries(new FormData($("#cf")));TPCMS.addLead({...fd,lang:L,files:files.filter(x=>!x.err).map(x=>({name:x.name,size:x.size}))});const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=f.ok;$("#cf .toast")?.remove();$("#cf").appendChild(t);$("#cf").reset();files=[];drawFiles()}};
+ $("#cf").onsubmit=async e=>{e.preventDefault();if(!validate())return;const btn=$("#cf button[type=submit]");btn.disabled=true;
+  const res=await TPCMS.addLead({...Object.fromEntries(new FormData($("#cf"))),lang:L,files:files.filter(x=>!x.err)});btn.disabled=false;
+  const ar=L==="ar",t=document.createElement("div");t.className="toast"+(res.ok?"":" err");t.setAttribute("role","status");
+  t.textContent=res.ok?(TPCMS.remote?(ar?"وصلنا طلبك، وسنعود إليك خلال يوم عمل.":"We received your request and will reply within one working day."):f.ok)
+   :res.error==="rate"?(ar?"أرسلت عدة طلبات من هذا البريد خلال وقت قصير. حاول مرة أخرى بعد ساعة.":"Several requests came from this email recently. Please try again in an hour.")
+   :(ar?"تعذّر إرسال الطلب. تحقق من الاتصال وحاول مرة أخرى.":"The request could not be sent. Check your connection and try again.");
+  $("#cf .toast")?.remove();$("#cf").appendChild(t);if(res.ok){$("#cf").reset();files=[];drawFiles()}};
  $$("#cf [data-req], #f-email, #f-phone").forEach(el=>el.addEventListener("blur",()=>checkField(el)));
 }
-function addFiles(list){const f=C.contact.f;$("#fileErr").textContent="";for(const x of list){if(files.length>=5){$("#fileErr").textContent=f.tooMany;break}const ext=x.name.split(".").pop().toLowerCase();files.push({name:x.name,size:x.size,err:!ALLOWED.includes(ext)?f.badType:x.size>MAXB?f.tooBig:""})}drawFiles()}
+function addFiles(list){const f=C.contact.f;$("#fileErr").textContent="";for(const x of list){if(files.length>=5){$("#fileErr").textContent=f.tooMany;break}const ext=x.name.split(".").pop().toLowerCase();files.push({file:x,name:x.name,size:x.size,err:!ALLOWED.includes(ext)?f.badType:x.size>MAXB?f.tooBig:""})}drawFiles()}
 function drawFiles(){const el=$("#fileList");if(!el)return;el.innerHTML=files.map((x,i)=>`<div class="file${x.err?" bad":""}"><span dir="ltr">${esc(x.name)} · ${(x.size/1048576).toFixed(1)} MB${x.err?" — "+esc(x.err):""}</span><button type="button" data-i="${i}" aria-label="remove">×</button></div>`).join("");$$("#fileList button").forEach(b=>b.onclick=()=>{files.splice(+b.dataset.i,1);drawFiles()})}
 function checkField(el){const f=C.contact.f,v=el.value.trim(),w=el.closest(".fld");let m="";
  if(el.hasAttribute("data-req")&&!v)m=f.req;else if(el.type==="email"&&v&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))m=f.badEmail;else if(el.type==="tel"&&v&&!/^\+?[\d\s\-()]{7,20}$/.test(v))m=f.badPhone;
@@ -361,9 +367,11 @@ if(TPCMS.preview){
  else document.documentElement.classList.add("cms-embed");
 }
 if(!TPCMS.preview)addEventListener("storage",e=>{if(e.key===TPCMS.K.live)cmsReload(TPCMS.read("live"))});
-cmsBG();
 
-/* ---------- boot ---------- */
+/* ---------- boot (after the CMS has loaded the content: instant locally, one request with Supabase) ---------- */
+TPCMS.ready.then(()=>{
+if(TPCMS.remote&&TPCMS.payload)Object.assign(TH,TPCMS.payload.theme);
+cmsBG();
 L=(TPCMS.preview&&new URLSearchParams(location.search).get("lang"))||store.get("tp-lang")||"ar";
 applyTheme(); render();
 $("#langBtn").onclick=()=>{L=L==="ar"?"en":"ar";store.set("tp-lang",L);render()};
@@ -373,4 +381,5 @@ $("#tcFab").onclick=openTC; $("#scrim").onclick=closeTC;
 $("#lb").addEventListener("click",e=>{if(e.target.id==="lb")closeLB()});
 $("#lb .lb-close").onclick=closeLB;
 document.addEventListener("keydown",e=>{if($("#lb").hidden)return;if(e.key==="Escape")closeLB();if(e.key==="ArrowLeft"||e.key==="ArrowRight"){const d=(e.key==="ArrowLeft")===(C.dir==="rtl")?1:-1;lbIndex=(lbIndex+d+lbList.length)%lbList.length;drawLB()}});
+});
 })();

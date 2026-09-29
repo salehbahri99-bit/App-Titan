@@ -7,7 +7,10 @@ const TPCMS=(()=>{
  const K={work:"tp-cms-work",draft:"tp-cms-draft",live:"tp-cms-live",versions:"tp-cms-versions",media:"tp-cms-media",leads:"tp-cms-leads",users:"tp-cms-users",session:"tp-cms-session",log:"tp-cms-log"};
  const clone=o=>JSON.parse(JSON.stringify(o));
  const get=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
- const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+ const cache=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+ /* hooks[key](next, prev) mirror a local write to the server (the dashboard registers them in Supabase mode) */
+ const hooks={};
+ const put=(k,v)=>{const prev=hooks[k]?get(k):null;if(!cache(k,v))return false;if(hooks[k])hooks[k](v,prev);return true};
 
  /* section registry: id, Arabic label, English label, type */
  const SECTIONS=[["hero","الواجهة","Hero","hero"],["about","من نحن","About","text"],["team","الفريق","Team","team"],["services","الخدمات","Services","services"],
@@ -46,7 +49,7 @@ const TPCMS=(()=>{
   return get(keyFor(m))||(m==="work"?get(K.draft)||get(K.live):m==="draft"?get(K.live):null);
  }
  const media=()=>get(K.media)||{};
- const mediaUrl=id=>id?(media()[id]||{}).data||null:null;
+ const mediaUrl=id=>{const r=id&&media()[id];return r?r.data||r.url||null:null};
 
  /* overlay a payload on the shared globals (CONTENT, CATS, PROJECTS, PROJ_META) — mutates in place */
  function apply(p){
@@ -97,9 +100,47 @@ const TPCMS=(()=>{
   s.textContent=themeCSS(t);
  }
 
- function addLead(l){const a=get(K.leads)||[];a.unshift({id:"L"+Date.now().toString(36),at:new Date().toISOString(),status:"new",...l});put(K.leads,a.slice(0,200))}
+ /* ---------- Supabase: used when config.js names a project; otherwise everything stays in this browser ---------- */
+ const CFG=typeof TP_CONFIG!=="undefined"?TP_CONFIG:{};
+ const remote=!!(CFG.supabaseUrl&&CFG.supabaseAnonKey);
+ let sb=null,sbLoading=null;
+ function client(){
+  if(sb)return Promise.resolve(sb);
+  return sbLoading=sbLoading||new Promise((res,rej)=>{
+   const make=()=>res(sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey,{auth:{persistSession:true,detectSessionInUrl:true}}));
+   if(window.supabase)return make();
+   const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+   s.onload=make;s.onerror=()=>rej(new Error("supabase_unavailable"));document.head.appendChild(s);
+  });
+ }
+ const toMedia=r=>({id:r.id,name:r.name,title:r.title,kind:r.kind,ext:r.ext,size:+r.size,optSize:r.opt_size?+r.opt_size:null,w:r.w,h:r.h,folder:r.folder,path:r.path,url:r.url,data:r.kind==="image"?r.url:null,clip:r.clip,at:+new Date(r.created_at),by:r.author});
+ async function pullMedia(c){const {data,error}=await c.from("media").select("*");if(error)throw error;const m={};data.forEach(r=>m[r.id]=toMedia(r));cache(K.media,m);return m}
+ async function slot(c,s){const {data,error}=await c.from("site_state").select("payload").eq("slot",s).maybeSingle();if(error)throw error;return data&&data.payload}
+ async function hydrateSite(){
+  if(mode==="work")return read("work");                      // the dashboard's own working copy, already local
+  const c=await client();let p=null;
+  if(/^v\d+$/.test(mode)){const {data}=await c.from("versions").select("payload").eq("v",+mode.slice(1)).maybeSingle();p=data&&data.payload}
+  else if(mode==="draft")p=await slot(c,"draft").catch(()=>null);
+  if(!p)p=await slot(c,"live");
+  await pullMedia(c).catch(()=>{});
+  return p;
+ }
 
- const payload=mode==="live"&&!get(K.live)?null:read();
- if(payload)apply(payload);
- return {K,SECTIONS,THEME_DEF,BASE,clone,get,put,read,apply,media,mediaUrl,themeCSS,injectTheme,addLead,mode,preview:mode!=="live",payload};
+ /* contact form → dashboard inbox. Returns {ok} or {ok:false,error:"rate"|"fail"} */
+ async function addLead(l){
+  const files=(l.files||[]).map(f=>({name:f.name,size:f.size,file:f.file}));
+  if(!remote){const a=get(K.leads)||[];a.unshift({id:"L"+Date.now().toString(36),at:new Date().toISOString(),status:"new",...l,files:files.map(({name,size})=>({name,size}))});put(K.leads,a.slice(0,200));return{ok:true}}
+  try{
+   const c=await client(),id=crypto.randomUUID(),stored=[];
+   for(const f of files){if(!f.file)continue;const path=`incoming/${id}/${Date.now().toString(36)}-${f.name.replace(/[^\w.\-]+/g,"_").slice(-80)}`;
+    const {error}=await c.storage.from("lead-files").upload(path,f.file,{upsert:false,contentType:f.file.type||"application/octet-stream"});if(error)throw error;stored.push({name:f.name,size:f.size,path})}
+   const {error}=await c.from("leads").insert({id,name:l.name,company:l.company||null,email:l.email,phone:l.phone||null,type:l.type||null,budget:l.budget||null,msg:l.msg,lang:l.lang==="en"?"en":"ar",files:stored});
+   if(error)throw error;return{ok:true};
+  }catch(e){return{ok:false,error:/rate_limited/.test(e&&e.message||"")?"rate":"fail"}}
+ }
+
+ const api={K,SECTIONS,THEME_DEF,BASE,clone,get,put,cache,hooks,read,apply,media,mediaUrl,themeCSS,injectTheme,addLead,mode,preview:mode!=="live",payload:null,remote,client,toMedia,pullMedia};
+ if(!remote){api.payload=mode==="live"&&!get(K.live)?null:read();if(api.payload)apply(api.payload);api.ready=Promise.resolve(api.payload)}
+ else api.ready=hydrateSite().catch(e=>{console.warn("Titan Pack: content service unavailable",e);return null}).then(p=>{api.payload=p;if(p)apply(p);return p});
+ return api;
 })();
