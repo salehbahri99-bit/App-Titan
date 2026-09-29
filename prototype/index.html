@@ -6,7 +6,7 @@
 <title>Titan Pack</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Reem+Kufi:wght@500;700&family=Cairo:wght@600;800&display=swap">
-<style>/* Layout concept: RTL editorial grid read like a press sheet — crop marks, crease (dashed) and cut (solid) rules, mm-annotated labels. */
+<style>/* Titan Pack design tokens — shared by the public site and the dashboard. */
 :root{
   --bg:#F7F2E6; --surface:#FFFCF4; --surface-2:#EFE6D0; --ink:#1E2A2E; --muted:#56666A;
   --line:rgba(6,65,79,.16); --line-strong:rgba(6,65,79,.38);
@@ -31,6 +31,7 @@
   --primary:#0B5566; --primary-ink:#8CC6D0; --on-primary:#F4ECD5; --accent-ink:#F2A868;
   --logo-light:none; --logo-dark:block; color-scheme:dark;}
 
+/* Layout concept: RTL editorial grid read like a press sheet — crop marks, crease (dashed) and cut (solid) rules, mm-annotated labels. */
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth}
@@ -458,6 +459,19 @@ html.nobg .sec-bg{display:none}
 .tc .clip-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .tc .clip-row button{aspect-ratio:16/9;border-radius:6px;border:2px solid transparent;background-size:cover;background-position:center;cursor:pointer;padding:0;position:relative;background-color:var(--surface-2);font-size:.7rem;color:var(--muted)}
 .tc .clip-row button[aria-pressed="true"]{border-color:var(--accent)}
+
+/* CMS hooks */
+.cms-custom .cms-img{width:100%;border-radius:var(--radius);border:1px solid var(--line);display:block}
+.cms-hero-img{background-size:cover;background-position:center}
+.cms-player{padding:0!important;background:#000!important}
+.cms-player iframe,.cms-player video{width:100%;height:100%;border:0;display:block}
+.cms-bar{position:fixed;top:0;inset-inline:0;z-index:90;display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;background:var(--accent);color:#2A1606;font-size:.85rem}
+.cms-bar span{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;opacity:.75}
+.cms-bar a{color:inherit;font-weight:600}
+html:has(.cms-bar) .hdr{top:36px}
+.cms-embed .tc-fab{display:none}
+@keyframes cmsFlash{0%{box-shadow:inset 0 0 0 3px var(--accent)}100%{box-shadow:inset 0 0 0 3px transparent}}
+.cms-flash{animation:cmsFlash 1.6s ease-out}
 </style>
 <script>try{var l=localStorage.getItem("tp-lang");document.documentElement.dir=l==="en"?"ltr":"rtl";document.documentElement.lang=l==="en"?"en":"ar"}catch(e){document.documentElement.dir="rtl";document.documentElement.lang="ar"}</script>
 </head>
@@ -494,13 +508,9 @@ html.nobg .sec-bg{display:none}
 <div class="scrim" id="scrim" hidden></div>
 <aside class="tc" id="tc" hidden aria-label="Theme"></aside>
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true"><button class="lb-close" type="button" aria-label="Close">✕</button><div class="lb-card" id="lbBody"></div></div>
-<script>/* Titan Pack — public site prototype. All visible content lives in CONTENT (mirrors the future CMS models). */
-(function(){
-"use strict";
-const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-
+<script>/* Titan Pack — shared design data: icons, content model, project list and the packaging render.
+   Loaded before app.js (public site) and admin.js (dashboard); cms.js overlays published/draft edits on top. */
+const tpEsc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 /* ---------- icons (24px line) ---------- */
 const I={
  pack:'<path d="M12 2.8 20.5 7v10L12 21.2 3.5 17V7z"/><path d="M3.5 7 12 11.2 20.5 7M12 11.2v10"/>',
@@ -677,8 +687,9 @@ const PROJ_META={hadaba:{mat:"fbb",fin:["matte","foil"],svc:[0,4,6]},lama:{mat:"
 /* ---------- packaging render generator (isometric SVG) ---------- */
 const SHAPES={cube:[1,1,1],tall:[.72,.72,1.75],wide:[1.7,1.2,.42],bar:[1.5,.62,.85],flat:[1.55,1.3,.3]};
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(amt<0?v*(1+amt):v+(255-v)*amt)));return"#"+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}
-let uid=0;
+let artUid=0;
 function boxArt(p,W=400,H=300,opt={}){
+ if(p.coverUrl)return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${tpEsc(opt.alt||p.lbl)}"><image href="${p.coverUrl}" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/></svg>`;
  const [w,d,h]=SHAPES[p.shape]; const c=.866;
  const P=(x,y,z)=>[(x-z)*c,(x+z)*.5-y];
  const V=[P(0,0,d),P(w,0,d),P(w,0,0),P(0,h,0),P(w,h,0),P(w,h,d),P(0,h,d)];
@@ -691,12 +702,12 @@ function boxArt(p,W=400,H=300,opt={}){
  const mA=`matrix(${(c*s).toFixed(3)},${(.5*s).toFixed(3)},0,${s.toFixed(3)},${Q(0,h,d).join(",")})`;
  const mB=`matrix(${(c*s).toFixed(3)},${(-.5*s).toFixed(3)},0,${s.toFixed(3)},${Q(w,h,d).join(",")})`;
  const mT=`matrix(${(c*s).toFixed(3)},${(.5*s).toFixed(3)},${(-c*s).toFixed(3)},${(.5*s).toFixed(3)},${Q(0,h,0).join(",")})`;
- const id="a"+(++uid);
+ const id="a"+(++artUid);
  // artwork on the front face (local units: u 0..w, v 0..h)
  const fw=w,fh=h,fs=Math.min(fw,fh);
  let art="";
- const lbl=`<text x="${fw/2}" y="${fh*.56}" text-anchor="middle" font-family="Alexandria,sans-serif" font-weight="800" font-size="${(fs*.17).toFixed(3)}" letter-spacing="${(fs*.012).toFixed(3)}" fill="${p.c3}">${esc(p.lbl)}</text>`;
- const sub=`<text x="${fw/2}" y="${fh*.56+fs*.12}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="${(fs*.055).toFixed(3)}" letter-spacing="${(fs*.01).toFixed(3)}" fill="${p.c3}" opacity=".75">${esc(p.sub||"EST. 2026")}</text>`;
+ const lbl=`<text x="${fw/2}" y="${fh*.56}" text-anchor="middle" font-family="Alexandria,sans-serif" font-weight="800" font-size="${(fs*.17).toFixed(3)}" letter-spacing="${(fs*.012).toFixed(3)}" fill="${p.c3}">${tpEsc(p.lbl)}</text>`;
+ const sub=`<text x="${fw/2}" y="${fh*.56+fs*.12}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="${(fs*.055).toFixed(3)}" letter-spacing="${(fs*.01).toFixed(3)}" fill="${p.c3}" opacity=".75">${tpEsc(p.sub||"EST. 2026")}</text>`;
  switch(p.pat){
   case"band":art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/><rect y="${fh*.36}" width="${fw}" height="${fh*.34}" fill="${p.c2}"/>${lbl.replace(p.c3,p.c1)}${sub.replace(p.c3,p.c1)}<circle cx="${fw/2}" cy="${fh*.2}" r="${fs*.07}" fill="none" stroke="${p.c2}" stroke-width="${fs*.012}"/>`;break;
   case"arc":art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/><circle cx="${fw/2}" cy="${fh*1.02}" r="${fw*.62}" fill="${p.c2}"/><circle cx="${fw*.5}" cy="${fh*.24}" r="${fs*.05}" fill="${p.c2}"/>${lbl}${sub}`;break;
@@ -705,14 +716,14 @@ function boxArt(p,W=400,H=300,opt={}){
   case"dots":{let dots="";for(let i=0;i<7;i++)for(let j=0;j<11;j++)dots+=`<circle cx="${(i+.5)*fw/7}" cy="${(j+.5)*fh/11}" r="${fs*.018}" fill="${p.c2}" opacity=".55"/>`;art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/>${dots}<rect x="${fw*.12}" y="${fh*.4}" width="${fw*.76}" height="${fs*.3}" rx="${fs*.03}" fill="${p.c1}"/>${lbl.replace(`y="${fh*.56}"`,`y="${fh*.4+fs*.2}"`)}`;break}
   case"stripes":{let st="";for(let i=0;i<10;i+=2)st+=`<rect x="${i*fw/10}" width="${fw/10}" height="${fh}" fill="${p.c2}"/>`;art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/>${st}<ellipse cx="${fw/2}" cy="${fh/2}" rx="${fw*.3}" ry="${fh*.34}" fill="${p.c1}"/>${lbl.replace(`y="${fh*.56}"`,`y="${fh*.56}"`).replace(/fill="[^"]+">/,`fill="${p.c3}">`)}`;break}
   case"kraft":art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/><circle cx="${fw/2}" cy="${fh/2}" r="${fs*.26}" fill="none" stroke="${p.c2}" stroke-width="${fs*.02}"/><circle cx="${fw/2}" cy="${fh/2}" r="${fs*.21}" fill="none" stroke="${p.c2}" stroke-width="${fs*.006}" stroke-dasharray="${fs*.02} ${fs*.015}"/>${lbl.replace(`y="${fh*.56}"`,`y="${fh/2+fs*.05}"`).replace(/fill="[^"]+">/,`fill="${p.c2}">`).replace(/font-size="[^"]+"/,`font-size="${(fs*.11).toFixed(3)}"`)}`;break;
-  default:art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/><text x="${fw/2}" y="${fh*.52}" text-anchor="middle" font-family="Arial,sans-serif" font-size="${fs*.12}" fill="${p.c3}">${esc(p.lbl)}</text><rect x="${fw*.3}" y="${fh*.6}" width="${fw*.4}" height="${fs*.03}" fill="${p.c3}" opacity=".5"/>`;
+  default:art=`<rect width="${fw}" height="${fh}" fill="${p.c1}"/><text x="${fw/2}" y="${fh*.52}" text-anchor="middle" font-family="Arial,sans-serif" font-size="${fs*.12}" fill="${p.c3}">${tpEsc(p.lbl)}</text><rect x="${fw*.3}" y="${fh*.6}" width="${fw*.4}" height="${fs*.03}" fill="${p.c3}" opacity=".5"/>`;
  }
  const side=p.pat==="kraft"?`<rect width="${d}" height="${h}" fill="${p.c1}"/><rect y="${h*.8}" width="${d}" height="${h*.2}" fill="${p.c2}" opacity=".85"/>`:
-   `<rect width="${d}" height="${h}" fill="${p.pat==="band"||p.pat==="arc"?p.c2:p.c1}"/><text x="${d/2}" y="${h/2}" text-anchor="middle" transform="rotate(90 ${d/2} ${h/2})" font-family="IBM Plex Mono,monospace" font-size="${Math.min(d,h)*.09}" letter-spacing="${Math.min(d,h)*.02}" fill="${p.pat==="band"||p.pat==="arc"?p.c1:p.c2}">${esc(p.lbl)}</text>`;
+   `<rect width="${d}" height="${h}" fill="${p.pat==="band"||p.pat==="arc"?p.c2:p.c1}"/><text x="${d/2}" y="${h/2}" text-anchor="middle" transform="rotate(90 ${d/2} ${h/2})" font-family="IBM Plex Mono,monospace" font-size="${Math.min(d,h)*.09}" letter-spacing="${Math.min(d,h)*.02}" fill="${p.pat==="band"||p.pat==="arc"?p.c1:p.c2}">${tpEsc(p.lbl)}</text>`;
  const top=`<rect width="${w}" height="${d}" fill="${p.pat==="frame"?p.c1:shade(p.c1,.08)}"/>${p.pat==="frame"?`<rect x="${Math.min(w,d)*.08}" y="${Math.min(w,d)*.08}" width="${w-Math.min(w,d)*.16}" height="${d-Math.min(w,d)*.16}" fill="none" stroke="${p.c2}" stroke-width="${Math.min(w,d)*.01}"/>`:""}`;
  const grid=opt.grid===false?"":`<pattern id="${id}g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="${shade(p.bg,-.1)}" stroke-width=".6"/></pattern><rect width="${W}" height="${H}" fill="url(#${id}g)" opacity=".7"/>`;
  const floor=Q(w/2,0,d/2);
- return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(opt.alt||p.lbl)}"><defs><clipPath id="${id}a"><rect width="${w}" height="${h}"/></clipPath><clipPath id="${id}b"><rect width="${d}" height="${h}"/></clipPath><linearGradient id="${id}s" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient></defs>
+ return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${tpEsc(opt.alt||p.lbl)}"><defs><clipPath id="${id}a"><rect width="${w}" height="${h}"/></clipPath><clipPath id="${id}b"><rect width="${d}" height="${h}"/></clipPath><linearGradient id="${id}s" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient></defs>
  <rect width="${W}" height="${H}" fill="${p.bg}"/>${grid}
  <ellipse cx="${floor[0]}" cy="${(+floor[1]+s*.06).toFixed(1)}" rx="${(s*(w+d)*.62).toFixed(1)}" ry="${(s*(w+d)*.16).toFixed(1)}" fill="#000" opacity=".16" style="filter:blur(6px)"/>
  <g transform="${mA}" clip-path="url(#${id}a)">${art}</g><polygon points="${poly(A)}" fill="url(#${id}s)"/>
@@ -722,6 +733,119 @@ function boxArt(p,W=400,H=300,opt={}){
  <line x1="${Q(w,0,d)[0]}" y1="${Q(w,0,d)[1]}" x2="${Q(w,h,d)[0]}" y2="${Q(w,h,d)[1]}" stroke="#fff" stroke-opacity=".25"/>
  </svg>`;
 }
+
+/* Titan Pack — CMS layer (prototype).
+   Stands in for the API: payloads live in localStorage under the keys below. The public site renders
+   the published payload, `?preview=draft` renders the saved draft, `?preview=work` renders the dashboard's
+   unsaved working copy (live preview iframe) and `?preview=v<N>` renders a stored version.
+   In production these become API calls; the payload shape is the contract. */
+const TPCMS=(()=>{
+ const K={work:"tp-cms-work",draft:"tp-cms-draft",live:"tp-cms-live",versions:"tp-cms-versions",media:"tp-cms-media",leads:"tp-cms-leads",users:"tp-cms-users",session:"tp-cms-session",log:"tp-cms-log"};
+ const clone=o=>JSON.parse(JSON.stringify(o));
+ const get=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
+ const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+
+ /* section registry: id, Arabic label, English label, type */
+ const SECTIONS=[["hero","الواجهة","Hero","hero"],["about","من نحن","About","text"],["team","الفريق","Team","team"],["services","الخدمات","Services","services"],
+  ["featured","مشاريع مختارة","Featured","projects"],["work","المعرض","Gallery","gallery"],["process","المراحل","Process","timeline"],["materials","الخامات والتشطيب","Materials","custom"],
+  ["ba","قبل / بعد","Before / After","beforeafter"],["video","الفيديو","Video","video"],["stats","الأرقام","Statistics","stats"],["testimonials","آراء العملاء","Testimonials","testimonials"],
+  ["cta","دعوة للعمل","CTA","cta"],["contact","تواصل","Contact","contact"]];
+
+ const THEME_DEF={primary:"#06414F",accent:"#EF974F",font:"Alexandria",radius:14,motion:true,mode:"auto",
+  secondary:"#EFE6D0",bg:"#F7F2E6",surface:"#FFFCF4",ink:"#1E2A2E",muted:"#56666A",border:"#06414F",success:"#2F7D5B",warning:"#C98A1B",error:"#B83A2E",
+  bodyFont:"IBM Plex Sans Arabic",baseSize:16,lineHeight:1.75,headWeight:700,tracking:-1,container:1240,btn:"soft",speed:1,ease:"smooth"};
+
+ /* defaults captured before any overlay — the "factory" content */
+ const BASE={v:1,
+  content:clone(CONTENT),
+  cats:[...CATS],
+  projects:PROJECTS.map((p,i)=>({...clone(p),featured:!!p.featured,status:"published",slug:p.id,meta:clone(PROJ_META[p.id]),industry:"",cover:null,gallery:[],videos:[],before:null,after:null,dieline:null,seo:{title:"",desc:""}})),
+  sections:SECTIONS.map(([id])=>({id,visible:true})),
+  services:CONTENT.ar.services.items.map(()=>({visible:true,image:null,gallery:[]})),
+  team:CONTENT.ar.team.members.map(()=>({visible:true,photo:null})),
+  tst:CONTENT.ar.tst.items.map(()=>({visible:true})),
+  videos:CONTENT.ar.video.items.map(()=>({url:"",poster:null})),
+  baMedia:CONTENT.ar.ba.cases.map(()=>[null,null]),
+  bg:{hero:{kind:"clip",clip:"dieline",url:"",image:null,ov:.55}},
+  theme:clone(THEME_DEF),
+  seo:{ar:{title:"تيتان باك — تصميم وهندسة العبوات",desc:"استوديو متخصص في تصميم العبوات والعلب والفرد والمجسمات ثلاثية الأبعاد وتجهيز ملفات الطباعة."},
+       en:{title:"Titan Pack — Packaging Design & Engineering",desc:"A studio for packaging, box design, dielines, 3D mockups and print-ready production files."},
+       og:null,canonical:"https://titanpack.com/",index:true,follow:true,sitemap:true},
+  settings:{defaultLang:"ar",en:true,maintenance:false,notify:"hello@titanpack.com",maxMB:25,maxFiles:5}
+ };
+
+ const params=new URLSearchParams(location.search);
+ const mode=params.get("preview")||"live";
+ function keyFor(m){return m==="draft"?K.draft:m==="work"?K.work:K.live}
+ function read(m=mode){
+  if(/^v\d+$/.test(m)){const v=(get(K.versions)||[]).find(x=>"v"+x.v===m);return v?v.snapshot:null}
+  return get(keyFor(m))||(m==="work"?get(K.draft)||get(K.live):m==="draft"?get(K.live):null);
+ }
+ const media=()=>get(K.media)||{};
+ const mediaUrl=id=>id?(media()[id]||{}).data||null:null;
+
+ /* overlay a payload on the shared globals (CONTENT, CATS, PROJECTS, PROJ_META) — mutates in place */
+ function apply(p){
+  p=p||BASE;
+  for(const l of ["ar","en"]){const t=CONTENT[l];for(const k of Object.keys(t))delete t[k];Object.assign(t,clone(p.content[l]||BASE.content[l]))}
+  CATS.splice(0,CATS.length,...p.cats);
+  const M=media();
+  // services: drop hidden ones and remap project→service indexes to match
+  const svcMap={};let n=0;(p.services||[]).forEach((s,i)=>{if(s.visible!==false)svcMap[i]=n++});
+  for(const l of ["ar","en"]){const C=CONTENT[l];
+   C.services.items=C.services.items.filter((_,i)=>svcMap[i]!==undefined);
+   C.team.members=C.team.members.filter((_,i)=>(p.team||[])[i]?.visible!==false);
+   C.tst.items=C.tst.items.filter((_,i)=>(p.tst||[])[i]?.visible!==false);
+  }
+  const live=p.projects.filter(x=>x.status==="published");
+  PROJECTS.splice(0,PROJECTS.length,...live.map(x=>({...x,featured:x.featured?1:0,coverUrl:x.cover&&M[x.cover]?M[x.cover].data:null})));
+  for(const k of Object.keys(PROJ_META))delete PROJ_META[k];
+  live.forEach(x=>{
+   PROJ_META[x.id]={...x.meta,svc:(x.meta.svc||[]).filter(i=>svcMap[i]!==undefined).map(i=>svcMap[i])};
+   for(const l of ["ar","en"]){const pr=CONTENT[l].proj;if(!pr[x.id])pr[x.id]=[x.lbl,"",""]}
+  });
+  return p;
+ }
+
+ /* theme tokens the site's own customizer doesn't cover → one <style> block (light palette only; dark keeps its own) */
+ const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`};
+ function themeCSS(t){
+  const d=THEME_DEF,v=[],x=[];
+  const c=(k,css)=>{if(t[k]&&t[k]!==d[k])v.push(css)};
+  c("bg",`--bg:${t.bg}`);c("surface",`--surface:${t.surface}`);c("secondary",`--surface-2:${t.secondary}`);c("ink",`--ink:${t.ink}`);c("muted",`--muted:${t.muted}`);
+  if(t.border&&t.border!==d.border)v.push(`--line:${hexA(t.border,.16)};--line-strong:${hexA(t.border,.38)}`);
+  c("success",`--success:${t.success}`);c("warning",`--warning:${t.warning}`);c("error",`--error:${t.error}`);
+  const g=[];
+  if(t.bodyFont&&t.bodyFont!==d.bodyFont)g.push(`--f-body:"${t.bodyFont}","IBM Plex Sans Arabic",system-ui,sans-serif`);
+  if(+t.container&&+t.container!==d.container)g.push(`--container:${+t.container}px`);
+  if(t.speed!=null&&+t.speed!==d.speed)g.push(`--speed:${+t.speed}`);
+  if(t.ease==="snappy")g.push(`--ease:cubic-bezier(.4,0,.2,1)`);else if(t.ease==="soft")g.push(`--ease:cubic-bezier(.16,1,.3,1)`);
+  if(v.length)x.push(`:root{${v.join(";")}}`);
+  if(g.length)x.push(`:root{${g.join(";")}}`);
+  if(+t.baseSize&&+t.baseSize!==d.baseSize||+t.lineHeight&&+t.lineHeight!==d.lineHeight)x.push(`body{font-size:${+t.baseSize}px;line-height:${+t.lineHeight}}`);
+  if(+t.headWeight!==d.headWeight||+t.tracking!==d.tracking)x.push(`h1,h2,h3,h4{font-weight:${+t.headWeight};letter-spacing:${(+t.tracking/100).toFixed(3)}em}`);
+  if(t.btn==="pill")x.push(`.btn{border-radius:999px}`);else if(t.btn==="square")x.push(`.btn{border-radius:2px}`);
+  return x.join("\n");
+ }
+ function injectTheme(t,doc=document){
+  let s=doc.getElementById("tp-cms-theme");
+  if(!s){s=doc.createElement("style");s.id="tp-cms-theme";doc.head.appendChild(s)}
+  s.textContent=themeCSS(t);
+ }
+
+ function addLead(l){const a=get(K.leads)||[];a.unshift({id:"L"+Date.now().toString(36),at:new Date().toISOString(),status:"new",...l});put(K.leads,a.slice(0,200))}
+
+ const payload=mode==="live"&&!get(K.live)?null:read();
+ if(payload)apply(payload);
+ return {K,SECTIONS,THEME_DEF,BASE,clone,get,put,read,apply,media,mediaUrl,themeCSS,injectTheme,addLead,mode,preview:mode!=="live",payload};
+})();
+
+/* Titan Pack — public site prototype. All visible content lives in CONTENT (mirrors the future CMS models). */
+(function(){
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 /* ---------- hero dieline (reverse tuck end, 60×30×90 mm at 1.6 u/mm) ---------- */
 function dieline(t){
@@ -804,7 +928,7 @@ function render(){
  $("#cta").innerHTML=`<div class="wrap"><div class="cta-band reveal"><svg class="bg" viewBox="0 0 400 380" aria-hidden="true" fill="none" stroke="#2A1606" stroke-width="2"><path d="M68 110V254M116 110V254M212 110V254M260 110V254" stroke-dasharray="7 6"/><path d="M44 120V244L68 254H356V110H68Z M116 110V62L130 40H198L212 62V110"/></svg><div><h2>${esc(Ct.h2)}</h2><p>${esc(Ct.p)}</p></div><div class="btns"><a class="btn btn-primary" href="#contact">${esc(Ct.c1)} <span class="arr">←</span></a><a class="btn btn-ghost" href="#process">${esc(Ct.c2)}</a></div></div></div>`;
 
  renderContact(); renderFooter(); renderTC();
- setupBG(); setupReveal();
+ setupBG(); setupReveal(); cmsAfterRender();
 }
 function cubeFaces(){const src=$("#logoDark").src;return `<div class="face f-front"><img src="${src}" alt=""><span class="tag">TITAN PACK</span></div><div class="face f-back"><span class="tag">60 × 30 × 90 MM · FBB 350</span></div><div class="face f-right"><span class="v">TITAN PACK</span></div><div class="face f-left"></div><div class="face f-top"></div><div class="face f-bottom"></div>`}
 
@@ -847,6 +971,8 @@ function renderBA(){
  $$("#ba .ba-tabs button").forEach(b=>b.onclick=()=>{baIdx=+b.dataset.i;renderBA()});
 }
 function baArt(after){
+ const bm=((TPCMS.payload||TPCMS.BASE).baMedia||[])[baIdx],mu=bm&&TPCMS.mediaUrl(bm[after]);
+ if(mu)return boxArt({coverUrl:mu,lbl:after?"after":"before"},640,480,{alt:after?"after":"before"});
  const cases=[[{shape:"tall",pat:"plain",bg:"#DAD8D2",c1:"#C9C6BD",c2:"#aaa",c3:"#5d5d5d",lbl:"COFFEE"},{...PROJECTS[0],bg:"#E9DCC6"}],[{shape:"bar",pat:"plain",bg:"#DADDDD",c1:"#F1F1EE",c2:"#aaa",c3:"#8b8b8b",lbl:"TABLETS 20"},{...PROJECTS[3]}]];
  return boxArt(cases[baIdx][after],640,480,{alt:after?"after":"before"});
 }
@@ -856,7 +982,7 @@ function renderVideo(){
  $("#video").innerHTML=`<div class="wrap">${secHead(V)}<div class="vid-grid"><div class="player reveal" id="player"><div class="vtitle"><span class="mono" style="color:var(--accent)">${esc(V.items[vidIdx][1])}</span><b>${esc(V.items[vidIdx][0])}</b></div><div class="scene"><div class="box3d">${cubeFaces()}</div></div><button class="play" type="button" id="playBtn"><i>▶</i>${esc(V.play)}</button></div>
  <div class="vlist">${V.items.map((v,i)=>`<button type="button" class="vitem" data-i="${i}" aria-current="${i===vidIdx}"><span class="th">${boxArt(PROJECTS[[2,6,8][i]],160,100,{grid:false,alt:v[0]})}</span><span><b>${esc(v[0])}</b><span>${esc(v[2])} · ${v[1]}</span></span></button>`).join("")}</div></div></div>`;
  $$("#video .vitem").forEach(b=>b.onclick=()=>{vidIdx=+b.dataset.i;renderVideo()});
- $("#playBtn").onclick=()=>{const n=document.createElement("div");n.className="note";n.innerHTML=`<p style="max-width:42ch">${esc(V.note)}</p>`;n.onclick=()=>n.remove();$("#player").appendChild(n)};
+ $("#playBtn").onclick=()=>{const u=((TPCMS.payload||TPCMS.BASE).videos[vidIdx]||{}).url;if(u){const y=u.match(/(?:youtu\.be\/|v=)([\w-]{11})/);const m=document.createElement("div");m.className="note cms-player";m.innerHTML=y?`<iframe src="https://www.youtube-nocookie.com/embed/${y[1]}?autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="video"></iframe>`:`<video src="${esc(u)}" controls autoplay playsinline></video>`;$("#player").appendChild(m);return}const n=document.createElement("div");n.className="note";n.innerHTML=`<p style="max-width:42ch">${esc(V.note)}</p>`;n.onclick=()=>n.remove();$("#player").appendChild(n)};
 }
 
 const ALLOWED=["pdf","ai","psd","zip","jpg","jpeg","png","webp"],MAXB=25*1024*1024;
@@ -882,7 +1008,7 @@ function renderContact(){
  ["dragleave","drop"].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove("over")}));
  drop.addEventListener("drop",ev=>addFiles([...ev.dataTransfer.files]));
  drawFiles();
- $("#cf").onsubmit=e=>{e.preventDefault();if(validate()){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=f.ok;$("#cf .toast")?.remove();$("#cf").appendChild(t);$("#cf").reset();files=[];drawFiles()}};
+ $("#cf").onsubmit=e=>{e.preventDefault();if(validate()){const fd=Object.fromEntries(new FormData($("#cf")));TPCMS.addLead({...fd,lang:L,files:files.filter(x=>!x.err).map(x=>({name:x.name,size:x.size}))});const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=f.ok;$("#cf .toast")?.remove();$("#cf").appendChild(t);$("#cf").reset();files=[];drawFiles()}};
  $$("#cf [data-req], #f-email, #f-phone").forEach(el=>el.addEventListener("blur",()=>checkField(el)));
 }
 function addFiles(list){const f=C.contact.f;$("#fileErr").textContent="";for(const x of list){if(files.length>=5){$("#fileErr").textContent=f.tooMany;break}const ext=x.name.split(".").pop().toLowerCase();files.push({name:x.name,size:x.size,err:!ALLOWED.includes(ext)?f.badType:x.size>MAXB?f.tooBig:""})}drawFiles()}
@@ -901,6 +1027,7 @@ function renderFooter(){
 /* ---------- theme customizer (demo of the Theme Engine) ---------- */
 const DEF={primary:"#06414F",accent:"#EF974F",font:"Alexandria",radius:14,motion:true,mode:"auto"};
 let TH={...DEF};try{Object.assign(TH,JSON.parse(store.get("tp-theme")||"{}"))}catch(e){}
+if(TPCMS.payload)Object.assign(TH,TPCMS.payload.theme);
 const FONTS=["Alexandria","Reem Kufi","Cairo","IBM Plex Sans Arabic"];
 function applyTheme(){
  const r=document.documentElement.style;
@@ -912,7 +1039,8 @@ function applyTheme(){
  r.setProperty("--radius",TH.radius+"px");
  document.documentElement.classList.toggle("nomotion",!TH.motion);
  if(TH.mode==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",TH.mode);
- store.set("tp-theme",JSON.stringify(TH));
+ TPCMS.injectTheme(TH);
+ if(!TPCMS.preview)store.set("tp-theme",JSON.stringify(TH));
 }
 function renderTC(){
  const T=C.tc,P=["#06414F","#1B1B1B","#23395B","#3E5641","#6B2D3C"],A=["#EF974F","#C9A45C","#E05D44","#6FB3A8","#F4ECD5"];
@@ -963,13 +1091,14 @@ const BG_DEF={
  contact:{clip:"sheet",mode:"scroll",ov:.9,oc:"var(--bg)"}
 };
 let BG=JSON.parse(JSON.stringify(BG_DEF)),BG_ON=true,bgSel="hero";
+const cmsBG=()=>{const b=TPCMS.payload&&TPCMS.payload.bg;if(!b)return;for(const k in b)if(BG[k]){const c=b[k];Object.assign(BG[k],{clip:c.kind==="url"?"url":c.kind==="clip"?c.clip:"",ov:c.ov,url:c.url});if(c.kind==="none"||c.kind==="image")BG[k].mode="off";else if(BG[k].mode==="off")BG[k].mode="scroll"}};
 try{const s=JSON.parse(store.get("tp-bg")||"null");if(s){for(const k in s.cfg)if(BG[k])Object.assign(BG[k],s.cfg[k]);BG_ON=s.on!==false}}catch(e){}
 const uploads={}; // section -> objectURL (session only; the real dashboard uploads to the media library)
 const saveBG=()=>{const cfg={};for(const k in BG){const{clip,mode,ov}=BG[k];cfg[k]={clip:clip==="upload"?BG_DEF[k].clip:clip,mode,ov}}store.set("tp-bg",JSON.stringify({on:BG_ON,cfg}))};
 const bgNodes={}; // section -> {wrap,video,ov,prog,cur}
 const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)");
 const VEXT=(()=>{const v=document.createElement("video");return v.canPlayType('video/mp4; codecs="avc1.42E01E"')?"mp4":"webm"})();
-function srcFor(k){const c=BG[k];return c.clip==="upload"?uploads[k]:c.clip&&CLIPS[c.clip]?`media/${c.clip}.${VEXT}`:""}
+function srcFor(k){const c=BG[k];return c.clip==="url"?c.url||"":c.clip==="upload"?uploads[k]:c.clip&&CLIPS[c.clip]?`media/${c.clip}.${VEXT}`:""}
 function posterFor(k){const c=BG[k];return c.clip&&CLIPS[c.clip]?`media/${c.clip}.jpg`:""}
 let bgIO;
 function setupBG(){
@@ -1042,8 +1171,42 @@ function setupReveal(){
  $$(".reveal").forEach(el=>{const r=el.getBoundingClientRect();if(r.top>innerHeight){el.classList.add("pre");io.observe(el)}});
 }
 
+/* ---------- CMS hooks: sections, custom blocks, hero media, SEO, live preview ---------- */
+function cmsAfterRender(){
+ const P=TPCMS.payload; if(!P)return;
+ const main=$("main"),hr=$("main > hr.crease");
+ for(const s of P.sections){
+  let el=document.getElementById(s.id);
+  if(s.custom){
+   if(!el){el=document.createElement("section");el.id=s.id;el.className="cms-custom"}
+   const t=s.custom[L]||s.custom.ar,img=TPCMS.mediaUrl(s.custom.image);
+   el.innerHTML=`<div class="wrap"><div class="sec-head"><div><div class="eyebrow mono">${esc(t.eyebrow||"")}</div><h2>${esc(t.h2||"")}</h2></div><div><p>${esc(t.p||"")}</p>${t.btn?`<a class="btn btn-accent" href="${esc(t.href||"#contact")}" style="margin-top:20px">${esc(t.btn)} <span class="arr">←</span></a>`:""}</div></div>${img?`<img class="cms-img" src="${img}" alt="" loading="lazy">`:""}</div>`;
+  }
+  if(!el)continue;
+  el.hidden=s.visible===false; main.appendChild(el);
+  if(s.id==="services"&&hr)main.appendChild(hr);
+ }
+ $$("main > section.cms-custom").forEach(el=>{if(!P.sections.some(s=>s.id===el.id))el.remove()});
+ const hb=P.bg&&P.bg.hero,hi=hb&&hb.kind==="image"&&TPCMS.mediaUrl(hb.image),h=$("#hero");
+ h.classList.toggle("cms-hero-img",!!hi);
+ h.style.backgroundImage=hi?`linear-gradient(color-mix(in srgb,var(--bg) ${Math.round(hb.ov*100)}%,transparent),color-mix(in srgb,var(--bg) ${Math.round(hb.ov*100)}%,transparent)),url("${hi}")`:"";
+ const seo=P.seo&&P.seo[L]; if(seo){document.title=seo.title;let m=$('meta[name="description"]');if(!m){m=document.createElement("meta");m.name="description";document.head.appendChild(m)}m.content=seo.desc}
+}
+function cmsReload(p){
+ if(!p)return; TPCMS.payload=p; TPCMS.apply(p);
+ Object.assign(TH,p.theme); cmsBG(); applyTheme(); render(); for(const k in bgNodes)applyBG(k);
+}
+if(TPCMS.preview){
+ addEventListener("storage",e=>{if(e.key===(TPCMS.mode==="work"?TPCMS.K.work:TPCMS.K.draft)||e.key===TPCMS.K.media)cmsReload(TPCMS.read())});
+ addEventListener("message",e=>{if(e.origin!==location.origin||!e.data||!e.data.tpScroll)return;const el=document.getElementById(e.data.tpScroll);if(el&&!el.hidden){scrollTo({top:el.getBoundingClientRect().top+scrollY-($(".hdr")?$(".hdr").offsetHeight:0),behavior:"smooth"});/* window-local: scrollIntoView would also scroll the embedding dashboard */el.classList.remove("cms-flash");void el.offsetWidth;el.classList.add("cms-flash")}});
+ if(TPCMS.mode!=="work"){const b=document.createElement("div");b.className="cms-bar";b.innerHTML=`<b>${TPCMS.mode==="draft"?"معاينة المسودة":"معاينة الإصدار "+esc(TPCMS.mode.slice(1))}</b><span>غير منشورة · PREVIEW</span><a href="index.html">الموقع المنشور</a><a href="admin.html">لوحة التحكم</a>`;document.body.appendChild(b)}
+ else document.documentElement.classList.add("cms-embed");
+}
+if(!TPCMS.preview)addEventListener("storage",e=>{if(e.key===TPCMS.K.live)cmsReload(TPCMS.read("live"))});
+cmsBG();
+
 /* ---------- boot ---------- */
-L=store.get("tp-lang")||"ar";
+L=(TPCMS.preview&&new URLSearchParams(location.search).get("lang"))||store.get("tp-lang")||"ar";
 applyTheme(); render();
 $("#langBtn").onclick=()=>{L=L==="ar"?"en":"ar";store.set("tp-lang",L);render()};
 $("#menuBtn").onclick=()=>{const n=$("#nav");n.classList.toggle("open");$("#menuBtn").setAttribute("aria-expanded",n.classList.contains("open"))};
